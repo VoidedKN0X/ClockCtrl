@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shell texts for this app -->
+    <string name="settings_subtitle">Alarms, timers, clock and privacy</string>
+    <string name="app_lock_subtitle">Ask for an app PIN (and optionally your fingerprint) when opening ClockCtrl. Ringing alarms and timers can always be stopped.</string>
+    <string name="app_lock_footer">ClockCtrl works fully offline: it has no internet permission, analytics or tracking. Your alarms, timers and cities stay on this phone.</string>
+    <string name="lock_prompt_subtitle">Your alarms and timers</string>
+    <string name="lock_forgot_body">The PIN can\'t be recovered. ClockCtrl will reset its own settings and turn the app lock off. Your alarms, timers and cities are kept, so no alarm is missed.</string>
+
+    <!-- Tabs -->
+    <string name="tab_alarms">Alarms</string>
+    <string name="tab_clock">Clock</string>
+    <string name="tab_timer">Timer</string>
+    <string name="tab_stopwatch">Stopwatch</string>
+
+    <!-- Alarms -->
+    <string name="next_alarm">Next alarm %1$s</string>
+    <string name="add_alarm">Add alarm</string>
+    <string name="no_alarms">No alarms</string>
+    <string name="no_alarms_body">Add an alarm to wake up or be reminded at a set time. Alarms ring even in Do Not Disturb.</string>
+    <string name="skipping_next">Skipping next</string>
+    <string name="repeat_once">Once</string>
+    <string name="repeat_daily">Every day</string>
+    <string name="repeat_weekdays">Weekdays</string>
+    <string name="repeat_weekends">Weekends</string>
+    <string name="warn_notifications">Notifications are off for ClockCtrl, so alarms can\'t show when they ring. Tap to turn them on.</string>
+    <string name="warn_full_screen">ClockCtrl can\'t show alarms over the lock screen. Tap to allow full screen notifications.</string>
+    <string name="warn_exact">ClockCtrl isn\'t allowed to set exact alarms, so they could ring late. Tap to allow alarms and reminders.</string>
+    <string name="in_days_hours">in %1$dd %2$dh</string>
+    <string name="in_hours_minutes">in %1$dh %2$dmin</string>
+    <string name="in_minutes">in %1$d min</string>
+    <string name="alarm_rings">Alarm rings %1$s</string>
+    <string name="alarm_set_for">Alarm set for %1$s</string>
+
+    <!-- Alarm editor -->
+    <string name="new_alarm">New alarm</string>
+    <string name="edit_alarm">Edit alarm</string>
+    <string name="delete">Delete</string>
+    <string name="repeat">Repeat</string>
+    <string name="label_hint">Label</string>
+    <string name="sound">Sound</string>
+    <string name="vibrate">Vibrate</string>
+    <string name="skip_next">Skip the next alarm</string>
+    <string name="unskip_next">Don\'t skip the next alarm</string>
+    <string name="skip_next_sub">Only the next ring; it repeats as usual after that</string>
+    <string name="delete_alarm_title">Delete this alarm?</string>
+    <string name="delete_alarm_body">It won\'t ring again.</string>
+    <string name="sound_default">Default alarm sound</string>
+    <string name="sound_silent">Silent</string>
+    <string name="sound_custom">Custom sound</string>
+
+    <!-- Ringing -->
+    <string name="alarm">Alarm</string>
+    <string name="snooze">Snooze</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="stop">Stop</string>
+    <string name="plus_minute">+1 min</string>
+    <string name="snoozed_until">Snoozed until %1$s</string>
+    <string name="missed_alarm">Missed alarm</string>
+
+    <!-- Clock -->
+    <string name="add_city">Add city</string>
+    <string name="next_alarm_at">Next alarm %1$s %2$s</string>
+    <string name="no_cities">No other cities</string>
+    <string name="no_cities_body">Add cities to see their time next to yours.</string>
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="same_time">Same time</string>
+    <string name="remove_city">Remove city</string>
+    <string name="search_city">Search a city or time zone</string>
+    <string name="added">Added</string>
+
+    <!-- Timer -->
+    <string name="timer">Timer</string>
+    <string name="add_timer">Add timer</string>
+    <string name="timer_of">%1$s timer</string>
+    <string name="timer_label">Timer label</string>
+    <string name="timer_done">Time\'s up</string>
+    <string name="timer_done_since">%1$s ago</string>
+    <string name="timer_ends">Ends at %1$s</string>
+    <string name="timer_paused">Paused · %1$s left</string>
+    <string name="timer_started">Timer started</string>
+    <string name="preset_min">%1$d min</string>
+    <string name="backspace">Delete digit</string>
+    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="reset">Reset</string>
+
+    <!-- Stopwatch -->
+    <string name="stopwatch">Stopwatch</string>
+    <string name="lap">Lap</string>
+    <string name="lap_n">Lap %1$d</string>
+    <string name="paused_at">Paused at %1$s</string>
+
+    <!-- Notification channels -->
+    <string name="ch_ringing">Ringing alarms and timers</string>
+    <string name="ch_ringing_desc">Shows an alarm or timer while it rings, over the lock screen</string>
+    <string name="ch_timers">Running timers</string>
+    <string name="ch_timers_desc">Shows the time left on running timers</string>
+    <string name="ch_stopwatch">Stopwatch</string>
+    <string name="ch_stopwatch_desc">Shows the stopwatch while it runs</string>
+    <string name="ch_snoozed">Snoozed alarms</string>
+    <string name="ch_snoozed_desc">Shows when a snoozed alarm rings again</string>
+    <string name="ch_missed">Missed alarms</string>
+    <string name="ch_missed_desc">Tells you when an alarm stopped ringing without being dismissed</string>
+
+    <!-- Settings -->
+    <string name="alarms_footer">Alarms ring at alarm volume, even in Do Not Disturb and before the phone is unlocked after a restart.</string>
+    <string name="snooze_length">Snooze length</string>
+    <string name="silence_after">Silence after</string>
+    <string name="gradual_volume">Gradually louder</string>
+    <string name="gradual_off">Off</string>
+    <string name="seconds_n">%1$d seconds</string>
+    <string name="minute_one">1 minute</string>
+    <string name="week_starts">Week starts on</string>
+    <string name="week_phone">Phone\'s setting</string>
+    <string name="week_monday">Monday</string>
+    <string name="week_saturday">Saturday</string>
+    <string name="week_sunday">Sunday</string>
+    <string name="alarm_volume">Alarm volume</string>
+    <string name="alarm_volume_sub">Set in Android\'s sound settings</string>
+    <string name="group_timers">Timers</string>
+    <string name="timer_sound">Timer sound</string>
+    <string name="show_seconds">Show seconds</string>
+    <string name="date_time">Date and time</string>
+    <string name="date_time_sub">Time zone and automatic time, in Android\'s settings</string>
+    <string name="no_app">No app on this phone can open that</string>
+
+    <plurals name="minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+</resources>
