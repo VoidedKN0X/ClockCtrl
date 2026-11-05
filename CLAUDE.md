@@ -22,6 +22,10 @@ Clock app (alarms, world clock, timers, stopwatch) in the VKNXWorks Ctrl series.
 - The ringing screen must stay usable when the app is locked and when the phone is locked; it shows only the alarm or timer.
 - Never lose alarms: "Forgot PIN" and settings resets keep `ClockStore`; every change goes through `Scheduler` so Android's alarms match the list.
 
+## Dependency verification
+
+Gradle checks every downloaded library and plugin against the SHA-256 checksums in `gradle/verification-metadata.xml` (checksums only, no PGP). When a dependency, plugin or Gradle version changes, start the `verification-metadata.yml` workflow (`gh api -X POST repos/VoidedKN0X/ClockCtrl/actions/workflows/verification-metadata.yml/dispatches -f ref=main`), take the file from its log (between the BEGIN/END markers, `base64 -d | gunzip`), check the diff (only Maven Central, Google's Maven and the Gradle plugin portal) and commit it in the same push as the change. Never turn verification off or make it lenient.
+
 ## Releasing
 
 - A release is published only when `versionName` in `app/build.gradle.kts` is bumped. Bump `versionCode` by 1 at the same time.
