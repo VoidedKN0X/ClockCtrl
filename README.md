@@ -57,7 +57,7 @@ Settings and About are behind your profile picture at the top right of every tab
 ## Is it safe to install?
 
 - **Open source.** All of ClockCtrl's code is in this repo, under the GPL-3.0 licence. Anyone can read it.
-- **Built by GitHub, not on a personal computer.** Every release on the Releases page is built by [the build workflow](.github/workflows/build.yml) on GitHub Actions, straight from the code in this repo. Each build also checks that the app has no network permission and no Google libraries.
+- **Built by GitHub, not on a personal computer.** Every release on the Releases page is built by [the build workflow](.github/workflows/build.yml) on GitHub Actions, straight from the code in this repo. Each build also checks that the Gradle wrapper is an official Gradle release, that the app has no network permission and that it has no Google libraries.
 - **Always signed with the same key.** Android refuses to install an update signed with a different key over ClockCtrl, and the CtrlF-Droid repo only accepts APKs signed with this key. The SHA-256 fingerprint of ClockCtrl's signing certificate is:
 
   ```
@@ -70,12 +70,18 @@ Settings and About are behind your profile picture at the top right of every tab
 
 | Permission | What ClockCtrl uses it for |
 | --- | --- |
-| Alarms and reminders (exact alarms) | Ringing alarms and timers at the exact time. |
-| Run at startup | Setting your alarms again after the phone restarts. |
-| Notifications, full-screen alerts | The ringing alarm over the lock screen, running timers, the stopwatch, snoozed and missed alarms. |
-| Foreground service (media playback) | Playing the alarm sound until you stop it. |
-| Vibration, wake lock | Vibrating while an alarm rings and keeping the phone awake for it. |
-| Use biometric hardware | Optional fingerprint unlock for the app lock. |
+| Alarms and reminders (`USE_EXACT_ALARM`) | Ringing alarms and timers at the exact time. |
+| Run at startup (`RECEIVE_BOOT_COMPLETED`) | Setting your alarms again after the phone restarts. |
+| Notifications (`POST_NOTIFICATIONS`) | Running timers, the stopwatch, snoozed and missed alarms, and the ringing alarm. |
+| Full-screen alerts (`USE_FULL_SCREEN_INTENT`) | Showing the ringing alarm or timer over the lock screen. |
+| Foreground service (`FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`) | Playing the alarm sound until you stop it. |
+| Vibration (`VIBRATE`) | Vibrating while an alarm rings, if the alarm has vibration on. |
+| Prevent phone from sleeping (`WAKE_LOCK`) | Keeping the phone awake while an alarm or timer rings. |
+| Use biometric hardware (`USE_BIOMETRIC`) | Optional fingerprint unlock for the app lock. |
+
+Android also lists a "dynamic receiver" permission (`DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`) that AndroidX adds to every app so only ClockCtrl itself can send it internal broadcasts; it gives the app no access to anything. ClockCtrl has no internet, location, contacts, storage, microphone or phone permissions.
+
+Other apps and assistants can set alarms and timers in ClockCtrl ("Set alarm", "Set timer") only if they hold Android's **Set an alarm** permission, as with any clock app.
 
 See [Privacy](#privacy) for what happens to your data.
 
@@ -156,6 +162,7 @@ Native Android apps for self-hosted services and everyday tools, all with the sa
 | [PaperCtrl](https://github.com/VoidedKN0X/PaperCtrl) | Scan and browse documents on Paperless-ngx |
 | [PrintCtrl](https://github.com/VoidedKN0X/PrintCtrl) | Bambu Lab printers through Bambuddy, and Spoolman spools |
 | [ProxCtrl](https://github.com/VoidedKN0X/ProxCtrl) | Manage your Proxmox VE server |
+| [RecorderCtrl](https://github.com/VoidedKN0X/RecorderCtrl) | Private, offline voice recorder |
 | [RideCtrl](https://github.com/VoidedKN0X/RideCtrl) | Offline maintenance, fuel and mod log for your vehicles |
 | [SeerrCtrl](https://github.com/VoidedKN0X/SeerrCtrl) | Request movies and shows on Seerr / Jellyseerr |
 | [SumCtrl](https://github.com/VoidedKN0X/SumCtrl) | Offline calculator, unit converter and work tools |

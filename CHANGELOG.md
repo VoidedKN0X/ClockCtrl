@@ -4,6 +4,20 @@ What changed in each ClockCtrl release. Every release on the [Releases page](htt
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.1.1 (2026-11-05)
+
+A small hardening update. Alarms, timers and settings are unchanged.
+
+### Privacy
+
+- **No debug logging in release builds.** Debug, verbose and info messages from the libraries ClockCtrl uses are now stripped from the app, so nothing can end up in the phone's system log. ClockCtrl's own code already logged nothing.
+
+### Project
+
+- The build now also checks that the Gradle wrapper is an official Gradle release before building.
+- `.gitignore` also covers `google-services.json`, so it can't be committed by accident.
+- README: every permission in the app is listed with its Android name and what it's for, including the "dynamic receiver" permission AndroidX adds, and the Ctrl series list now has all 28 apps.
+
 ## v0.1.0 (2026-11-05)
 
 The first release of ClockCtrl: a private, offline clock app in the Ctrl series, made to replace your phone's clock app on any Android 13+ phone.
