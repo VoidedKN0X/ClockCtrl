@@ -4,6 +4,14 @@ What changed in each ClockCtrl release. Every release on the [Releases page](htt
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.1.2 (2026-11-05)
+
+A small security update for the app lock. Alarms, timers, cities and settings are unchanged.
+
+### Security
+
+- **"Forgot PIN?" now asks for your phone's screen lock.** Before, anyone holding your unlocked phone could tap "Forgot PIN?" on the lock screen and turn ClockCtrl's app lock off without knowing the PIN. Now the reset first asks for your phone's own PIN, pattern, password or fingerprint. If you cancel or it fails, nothing is reset. If your phone has no screen lock at all, the reset works as before.
+
 ## v0.1.1 (2026-11-05)
 
 A small hardening update. Alarms, timers and settings are unchanged.
