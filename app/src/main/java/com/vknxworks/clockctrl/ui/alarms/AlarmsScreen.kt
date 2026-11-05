@@ -4,7 +4,6 @@ import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -164,7 +163,7 @@ private fun Warnings() {
     }
     val nm = context.getSystemService(NotificationManager::class.java)
     val notificationsOn = remember(tick) { nm?.areNotificationsEnabled() != false }
-    val fullScreen = remember(tick) { Build.VERSION.SDK_INT < 34 || nm?.canUseFullScreenIntent() != false }
+    val fullScreen = remember(tick) { nm?.canUseFullScreenIntent() != false }
     val exact = remember(tick) { context.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() != false }
     var asked by remember { mutableIntStateOf(0) }
     val notifPerm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { asked++; tick++ }

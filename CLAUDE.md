@@ -17,7 +17,7 @@ Clock app (alarms, world clock, timers, stopwatch) in the VKNXWorks Ctrl series.
 - **Telemetry-free:** no analytics or crash reporting.
 - arm64-v8a only. Every user-facing string goes in `strings.xml` (shared Ctrl strings in `strings_ctrl.xml`).
 - Settings open only from the profile picture. No settings tab, menu or gear icon, no You tab.
-- Must work as a normal user app on any ROM (Android 13+), not only when built into the system.
+- Must work as a normal user app on any ROM (Android 15+), not only when built into the system.
 - Everything that rings must work in Direct Boot: ring components are `directBootAware` and only touch `ClockStore` (device-protected storage), never DataStore or the app lock.
 - The ringing screen must stay usable when the app is locked and when the phone is locked; it shows only the alarm or timer.
 - Never lose alarms: "Forgot PIN" and settings resets keep `ClockStore`; every change goes through `Scheduler` so Android's alarms match the list.

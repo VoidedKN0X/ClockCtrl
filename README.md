@@ -2,7 +2,7 @@
 
 **A private, offline clock app: alarms, world clock, timers and a stopwatch.**
 
-[![Latest release](https://img.shields.io/github/v/release/VoidedKN0X/ClockCtrl?label=download)](https://github.com/VoidedKN0X/ClockCtrl/releases/latest) ![Android 13+](https://img.shields.io/badge/Android-13%2B-3DDC84?logo=android&logoColor=white) [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![Telemetry-free](https://img.shields.io/badge/telemetry-none-brightgreen) ![Offline](https://img.shields.io/badge/internet-none-brightgreen) [![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/VoidedKN0X)
+[![Latest release](https://img.shields.io/github/v/release/VoidedKN0X/ClockCtrl?label=download)](https://github.com/VoidedKN0X/ClockCtrl/releases/latest) ![Android 15+](https://img.shields.io/badge/Android-15%2B-3DDC84?logo=android&logoColor=white) [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![Telemetry-free](https://img.shields.io/badge/telemetry-none-brightgreen) ![Offline](https://img.shields.io/badge/internet-none-brightgreen) [![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/VoidedKN0X)
 
 ClockCtrl replaces your phone's clock app: alarms that ring reliably (also in Do Not Disturb and before the phone is unlocked after a restart), a world clock, several timers at once and a stopwatch with laps. It never goes online.
 
@@ -25,7 +25,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 
 ## Requirements
 
-- Android 13 or newer, on a 64-bit ARM phone (nearly every phone from the last several years)
+- Android 15 or newer, on a 64-bit ARM phone (nearly every phone from the last several years)
 - Works on any Android ROM as a normal app: stock Android, LineageOS, GrapheneOS, CalyxOS, /e/OS and the phone makers' own systems. It doesn't need root or to be built into the system.
 - **Google-free and de-Googled:** no Google Play services, Firebase or other Google libraries, and the app never contacts Google.
 
@@ -42,7 +42,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 
 If the Obtainium button doesn't open the app, add `https://github.com/VoidedKN0X/ClockCtrl` in Obtainium by hand.
 
-**Use it as your clock app:** Android has no "default clock" setting; ClockCtrl handles "Set alarm" and "Set timer" from other apps, and the alarm icon in the status bar opens it. If another clock app is installed, Android may ask which app to use the first time. Turn off alarms in your old clock app so they don't ring twice. ClockCtrl works as a normal app on any Android 13+ ROM; it doesn't need to be built into the system.
+**Use it as your clock app:** Android has no "default clock" setting; ClockCtrl handles "Set alarm" and "Set timer" from other apps, and the alarm icon in the status bar opens it. If another clock app is installed, Android may ask which app to use the first time. Turn off alarms in your old clock app so they don't ring twice. ClockCtrl works as a normal app on any Android 15+ ROM; it doesn't need to be built into the system.
 
 ## Getting started
 

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.net.Uri
-import android.os.Build
 import android.text.format.DateFormat
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -95,9 +94,7 @@ fun rememberSoundPicker(onPick: (String?) -> Unit): (String?) -> Unit {
     val launcher: ManagedActivityResultLauncher<Intent, ActivityResult> =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
             if (res.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
-            @Suppress("DEPRECATION")
-            val picked: Uri? = if (Build.VERSION.SDK_INT >= 33) res.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri::class.java)
-            else res.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            val picked: Uri? = res.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri::class.java)
             val default = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             onPick(
                 when (picked) {
