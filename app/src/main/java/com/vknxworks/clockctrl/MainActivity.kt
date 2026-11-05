@@ -79,7 +79,7 @@ fun CtrlWindow(activity: ComponentActivity, content: @Composable () -> Unit) {
     }
     // While a lock or PIN screen covers the app: no other apps' overlays on top, and hidden from apps that
     // misuse accessibility (real screen readers still work). The rest of the app is unaffected.
-    SensitiveWindowEffect(enabled = lockCovering(c.vault))
+    SensitiveWindowEffect(enabled = lockCovering(c.vault), sensitiveData = true)
     ClockCtrlTheme(dark) {
         AppLockGate { content() }
     }
