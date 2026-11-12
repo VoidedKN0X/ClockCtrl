@@ -4,6 +4,16 @@ What changed in each ClockCtrl release. Every release on the [Releases page](htt
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.1.6 (2026-11-12)
+
+### Fixed
+
+- **The alarm's label is readable in the dark theme.** On the screen that shows while an alarm or timer rings, the label under the time was drawn in black, so on the dark background you could hardly see it. Text now takes its colour from the theme everywhere in the app: light on the dark background, dark on the light one.
+
+### Changed
+
+- **Slightly smaller download.** The bundled JetBrains Mono font (numbers, readouts and labels) no longer carries the Cyrillic, Vietnamese and maths-alphabet letters ClockCtrl never shows itself, which takes about 0.1 MB off the download and 0.2 MB off the installed app. Everything looks the same; if a name or a log line shown in that font uses one of those scripts, those letters are now drawn with your phone's own font.
+
 ## v0.1.5 (2026-11-05)
 
 ClockCtrl now needs Android 15 or newer.
