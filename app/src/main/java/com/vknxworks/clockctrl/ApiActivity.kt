@@ -40,7 +40,7 @@ class ApiActivity : ComponentActivity() {
                 val days = (intent.getIntegerArrayListExtra(AlarmClock.EXTRA_DAYS) ?: arrayListOf())
                     .mapNotNull { d -> if (d in Calendar.SUNDAY..Calendar.SATURDAY) (if (d == Calendar.SUNDAY) 7 else d - 1) else null }.toSet()
                 val vibrate = intent.getBooleanExtra(AlarmClock.EXTRA_VIBRATE, true)
-                val ringtone = intent.getStringExtra(AlarmClock.EXTRA_RINGTONE)?.let { if (it == AlarmClock.VALUE_RINGTONE_SILENT) "" else it }
+                val ringtone = intent.getStringExtra(AlarmClock.EXTRA_RINGTONE)?.let { if (it == AlarmClock.VALUE_RINGTONE_SILENT) "" else safeSound(it) }
                 val data = ClockStore.load(this)
                 // The same alarm already exists: switch it on instead of making a copy.
                 val existing = data.alarms.firstOrNull { it.hour == hour && it.minute == minute && it.days == days && it.label == label }
@@ -65,6 +65,19 @@ class ApiActivity : ComponentActivity() {
             }
             AlarmClock.ACTION_DISMISS_ALARM -> RingService.ringing.value?.takeIf { !it.isTimer }?.let { RingService.send(this, RingService.ACTION_DISMISS, it.id) }
             AlarmClock.ACTION_SNOOZE_ALARM -> RingService.ringing.value?.takeIf { !it.isTimer }?.let { RingService.send(this, RingService.ACTION_SNOOZE, it.id) }
+        }
+    }
+
+    /**
+     * A sound another app asks for: only a shared sound (content:// or a sound built into an app). Anything else
+     * (a file path, a web address, a malformed value) falls back to the phone's alarm sound, so another app can't
+     * make ClockCtrl open its own files or leave the alarm without a sound it can play.
+     */
+    private fun safeSound(value: String): String? {
+        val uri = runCatching { android.net.Uri.parse(value) }.getOrNull() ?: return null
+        return when (uri.scheme?.lowercase()) {
+            "content", "android.resource" -> value.take(2048)
+            else -> null
         }
     }
 

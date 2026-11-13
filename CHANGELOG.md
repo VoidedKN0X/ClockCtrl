@@ -4,6 +4,15 @@ What changed in each ClockCtrl release. Every release on the [Releases page](htt
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.1.7 (2026-11-13)
+
+A small security update. Alarms, timers and everything else work as before.
+
+### Security
+
+- **Safer alarms from other apps.** When another app or a voice assistant sets an alarm and asks for a particular sound, ClockCtrl now only accepts a shared sound (such as one from your ringtone list). A file path, web address or malformed value is ignored and the alarm rings with your phone's alarm sound instead, so another app can't make ClockCtrl open its own files or set an alarm with a sound it can't play.
+- **Checked build tools.** The build now checks the Gradle download against its published checksum, so a tampered build tool can't slip into a release.
+
 ## v0.1.6 (2026-11-12)
 
 ### Fixed
