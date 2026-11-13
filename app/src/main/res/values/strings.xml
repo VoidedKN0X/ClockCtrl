@@ -51,6 +51,18 @@
     <string name="sound_default">Default alarm sound</string>
     <string name="sound_silent">Silent</string>
     <string name="sound_custom">Custom sound</string>
+    <string name="group_wake_up">Waking up</string>
+    <string name="sunrise">Sunrise</string>
+    <string name="sunrise_off">Off</string>
+    <string name="sunrise_before">%1$d min before</string>
+    <string name="challenge">Solve a sum to dismiss</string>
+    <string name="challenge_off">Off</string>
+    <string name="challenge_easy">Easy (7 + 12)</string>
+    <string name="challenge_medium">Medium (47 + 36, 7 × 8)</string>
+    <string name="challenge_hard">Hard (7 × 14 + 38)</string>
+    <string name="wake_up_footer">Sunrise slowly brightens the screen from a deep warm colour to white before the alarm, then the sound fades in. If you\'re using the phone then, a quiet notification shows instead. With a sum, Dismiss asks you to solve it first; Snooze stays one tap, and after 3 wrong answers you get a new sum.</string>
+    <string name="sunrise_short">Sunrise</string>
+    <string name="challenge_short">Sum to dismiss</string>
 
     <!-- Ringing -->
     <string name="alarm">Alarm</string>
@@ -60,6 +72,34 @@
     <string name="plus_minute">+1 min</string>
     <string name="snoozed_until">Snoozed until %1$s</string>
     <string name="missed_alarm">Missed alarm</string>
+    <string name="challenge_hint">Dismiss asks you to solve a sum. Snooze is one tap.</string>
+
+    <!-- Dismiss sum -->
+    <string name="challenge_heading">Solve to dismiss</string>
+    <string name="challenge_check">Check answer</string>
+    <string name="challenge_answer_empty">Your answer: nothing typed yet</string>
+    <string name="challenge_answer_spoken">Your answer: %1$s</string>
+    <string name="challenge_new_sum">Here\'s a new sum.</string>
+    <plurals name="challenge_wrong">
+        <item quantity="one">Not quite. %1$d more try, then a new sum.</item>
+        <item quantity="other">Not quite. %1$d more tries, then a new sum.</item>
+    </plurals>
+    <string name="sum_question_spoken">What is %1$s?</string>
+    <string name="sum_plus_spoken">%1$s plus %2$s</string>
+    <string name="sum_minus_spoken">%1$s minus %2$s</string>
+    <string name="sum_times_spoken">%1$s times %2$s</string>
+    <string name="op_plus" translatable="false">+</string>
+    <string name="op_minus" translatable="false">−</string>
+    <string name="op_times" translatable="false">×</string>
+
+    <!-- Sunrise -->
+    <string name="sunrise_title">Sunrise alarm</string>
+    <string name="sunrise_until">Alarm at %1$s</string>
+    <string name="sunrise_skip">Skip this alarm</string>
+    <string name="sunrise_skip_sub">Solve the sum to skip the alarm at %1$s</string>
+    <string name="sunrise_awake">I\'m awake</string>
+    <string name="sunrise_awake_sub">Skips this alarm. A repeating alarm rings as usual next time.</string>
+    <string name="sunrise_awake_sub_challenge">Solve a sum to skip this alarm. A repeating alarm rings as usual next time.</string>
 
     <!-- Clock -->
     <string name="add_city">Add city</string>
@@ -108,6 +148,10 @@
     <string name="ch_snoozed_desc">Shows when a snoozed alarm rings again</string>
     <string name="ch_missed">Missed alarms</string>
     <string name="ch_missed_desc">Tells you when an alarm stopped ringing without being dismissed</string>
+    <string name="ch_sunrise">Sunrise alarms</string>
+    <string name="ch_sunrise_desc">Shows the sunrise before an alarm, over the lock screen. Silent.</string>
+    <string name="ch_sunrise_quiet">Sunrise while you use the phone</string>
+    <string name="ch_sunrise_quiet_desc">A quiet note that a sunrise alarm has started, when you\'re using the phone</string>
 
     <!-- Settings -->
     <string name="alarms_footer">Alarms ring at alarm volume, even in Do Not Disturb and before the phone is unlocked after a restart.</string>

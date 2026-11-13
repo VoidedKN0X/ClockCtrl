@@ -20,8 +20,11 @@ object Notifications {
     private const val ID_MISSED = 3
     private const val ID_TIMER_BASE = 10_000
     private const val ID_SNOOZE_BASE = 20_000
+    private const val ID_SUNRISE_BASE = 30_000
 
     private const val CH_RING = "ringing"
+    private const val CH_SUNRISE = "sunrise"
+    private const val CH_SUNRISE_QUIET = "sunrise_quiet"
     private const val CH_TIMERS = "timers"
     private const val CH_STOPWATCH = "stopwatch"
     private const val CH_MISSED = "missed_alarms"
@@ -36,6 +39,18 @@ object Notifications {
             enableVibration(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             setBypassDnd(true)
+        })
+        // Sunrise alarms: the same Do Not Disturb terms as a ringing alarm, but silent (the sound starts at the ring).
+        nm.createNotificationChannel(NotificationChannel(CH_SUNRISE, context.getString(R.string.ch_sunrise), NotificationManager.IMPORTANCE_HIGH).apply {
+            description = context.getString(R.string.ch_sunrise_desc)
+            setSound(null, null)
+            enableVibration(false)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            setBypassDnd(true)
+        })
+        nm.createNotificationChannel(NotificationChannel(CH_SUNRISE_QUIET, context.getString(R.string.ch_sunrise_quiet), NotificationManager.IMPORTANCE_LOW).apply {
+            description = context.getString(R.string.ch_sunrise_quiet_desc)
+            setShowBadge(false)
         })
         nm.createNotificationChannel(NotificationChannel(CH_TIMERS, context.getString(R.string.ch_timers), NotificationManager.IMPORTANCE_LOW).apply {
             description = context.getString(R.string.ch_timers_desc)
@@ -98,9 +113,49 @@ object Notifications {
             b.addAction(act(context, R.string.plus_minute, broadcast(context, ActionReceiver.TIMER_ADD_MINUTE, r.id, 3)))
         } else {
             b.addAction(act(context, R.string.snooze, ringAction(context, RingService.ACTION_SNOOZE, 4)))
-            b.addAction(act(context, R.string.dismiss, ringAction(context, RingService.ACTION_DISMISS, 5)))
+            // With a dismiss sum, dismissing happens on the alarm screen only (tapping the notification opens it).
+            if (r.challenge <= 0) b.addAction(act(context, R.string.dismiss, ringAction(context, RingService.ACTION_DISMISS, 5)))
         }
         return b.build()
+    }
+
+    /**
+     * A sunrise is starting. [takeOver]: a full-screen notification that opens the sunrise page over the lock screen
+     * (on the same Do Not Disturb terms as a ringing alarm); otherwise a quiet notification, because the phone is
+     * in use. Tapping either opens the page.
+     */
+    fun sunrise(context: Context, alarm: com.vknxworks.clockctrl.data.Alarm, startAt: Long, ringAt: Long, takeOver: Boolean) {
+        channels(context)
+        val nm = context.getSystemService(NotificationManager::class.java) ?: return
+        val page = PendingIntent.getActivity(
+            context, 7_000_000 + alarm.id,
+            Intent(context, SunriseActivity::class.java)
+                .putExtra(AlarmReceiver.EXTRA_ID, alarm.id)
+                .putExtra(SunriseActivity.EXTRA_START, startAt)
+                .putExtra(SunriseActivity.EXTRA_RING, ringAt)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val b = Notification.Builder(context, if (takeOver) CH_SUNRISE else CH_SUNRISE_QUIET)
+            .setSmallIcon(R.drawable.ic_stat_alarm)
+            .setContentTitle(alarm.label.ifBlank { context.getString(R.string.sunrise_title) })
+            .setContentText(context.getString(R.string.sunrise_until, time(context, ringAt)))
+            .setCategory(Notification.CATEGORY_ALARM)
+            .setContentIntent(page)
+            .setOnlyAlertOnce(true)
+            .setShowWhen(false)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setTimeoutAfter((ringAt - System.currentTimeMillis()).coerceAtLeast(0) + 60_000L)
+        if (takeOver) b.setFullScreenIntent(page, true)
+        // Skipping from the notification would get round the dismiss sum; with one, skip on the page.
+        if (alarm.challenge <= 0) {
+            b.addAction(act(context, R.string.sunrise_skip, broadcast(context, ActionReceiver.ALARM_SKIP, alarm.id, 8_000_000 + alarm.id)))
+        }
+        runCatching { nm.notify(ID_SUNRISE_BASE + alarm.id, b.build()) }
+    }
+
+    fun cancelSunrise(context: Context, alarmId: Int) {
+        context.getSystemService(NotificationManager::class.java)?.cancel(ID_SUNRISE_BASE + alarmId)
     }
 
     /** One notification per running or paused timer, counting down by itself. */
@@ -171,18 +226,18 @@ object Notifications {
         runCatching { nm.notify(ID_STOPWATCH, b.build()) }
     }
 
-    fun snoozed(context: Context, alarmId: Int, label: String, until: Long) {
+    fun snoozed(context: Context, alarmId: Int, label: String, until: Long, challenge: Int = 0) {
         channels(context)
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
-        val n = Notification.Builder(context, CH_SNOOZE)
+        val b = Notification.Builder(context, CH_SNOOZE)
             .setSmallIcon(R.drawable.ic_stat_alarm)
             .setContentTitle(label.ifBlank { context.getString(R.string.alarm) })
             .setContentText(context.getString(R.string.snoozed_until, time(context, until)))
             .setContentIntent(open(context, MainActivity.ACTION_SHOW_ALARMS, 300))
             .setTimeoutAfter((until - System.currentTimeMillis()).coerceAtLeast(1000))
-            .addAction(act(context, R.string.dismiss, broadcast(context, ActionReceiver.SNOOZE_CANCEL, alarmId, 5000 + alarmId)))
-            .build()
-        runCatching { nm.notify(ID_SNOOZE_BASE + alarmId, n) }
+        // An alarm with a dismiss sum is dismissed by solving it when it rings again, not from here.
+        if (challenge <= 0) b.addAction(act(context, R.string.dismiss, broadcast(context, ActionReceiver.SNOOZE_CANCEL, alarmId, 5000 + alarmId)))
+        runCatching { nm.notify(ID_SNOOZE_BASE + alarmId, b.build()) }
     }
 
     fun cancelSnoozed(context: Context, alarmId: Int) {

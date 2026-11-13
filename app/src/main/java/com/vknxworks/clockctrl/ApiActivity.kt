@@ -63,7 +63,14 @@ class ApiActivity : ComponentActivity() {
                 Toast.makeText(this, getString(R.string.timer_started), Toast.LENGTH_SHORT).show()
                 if (!skipUi) open(MainActivity.ACTION_SHOW_TIMERS)
             }
-            AlarmClock.ACTION_DISMISS_ALARM -> RingService.ringing.value?.takeIf { !it.isTimer }?.let { RingService.send(this, RingService.ACTION_DISMISS, it.id) }
+            AlarmClock.ACTION_DISMISS_ALARM -> RingService.ringing.value?.takeIf { !it.isTimer }?.let {
+                // An alarm with a dismiss sum is only dismissed by solving it: show the alarm screen instead.
+                if (it.challenge > 0) {
+                    runCatching { startActivity(Intent(this, com.vknxworks.clockctrl.alarm.AlarmActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                } else {
+                    RingService.send(this, RingService.ACTION_DISMISS, it.id)
+                }
+            }
             AlarmClock.ACTION_SNOOZE_ALARM -> RingService.ringing.value?.takeIf { !it.isTimer }?.let { RingService.send(this, RingService.ACTION_SNOOZE, it.id) }
         }
     }

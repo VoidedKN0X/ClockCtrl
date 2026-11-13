@@ -37,7 +37,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,6 +117,12 @@ private fun AlarmScreen(r: Ringing) {
             delay(1000)
         }
     }
+    // "Solve a sum to dismiss": Dismiss opens the sum; Snooze stays one tap.
+    var solving by remember(r.startedAt) { mutableStateOf(false) }
+    if (solving && !r.isTimer && r.challenge > 0) {
+        ChallengeScreen(r, now, onBack = { solving = false })
+        return
+    }
     Column(
         Modifier.fillMaxSize().background(CtrlColors.Background).statusBarsPadding().navigationBarsPadding().padding(horizontal = Gutter, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -151,11 +161,50 @@ private fun AlarmScreen(r: Ringing) {
                     RingService.send(context, RingService.ACTION_SNOOZE, r.id)
                 }
                 Big(Icons.Outlined.AlarmOff, stringResource(R.string.dismiss), CtrlColors.Accent, CtrlColors.OnAccent, Modifier.weight(1f)) {
-                    RingService.send(context, RingService.ACTION_DISMISS, r.id)
+                    if (r.challenge > 0) solving = true else RingService.send(context, RingService.ACTION_DISMISS, r.id)
                 }
             }
         }
+        if (!r.isTimer && r.challenge > 0) {
+            Spacer(Modifier.height(10.dp))
+            Text(stringResource(R.string.challenge_hint), style = MaterialTheme.typography.bodySmall, color = CtrlColors.Muted, textAlign = TextAlign.Center)
+        }
         Spacer(Modifier.height(12.dp))
+    }
+}
+
+/** The dismiss sum while the alarm keeps ringing (at its own volume; it still goes quiet after "Silence after"). */
+@Composable
+private fun ChallengeScreen(r: Ringing, now: Long, onBack: () -> Unit) {
+    val context = LocalContext.current
+    androidx.activity.compose.BackHandler(onBack = onBack)
+    Column(
+        Modifier.fillMaxSize().background(CtrlColors.Background).statusBarsPadding().navigationBarsPadding()
+            .verticalScroll(rememberScrollState()).padding(horizontal = Gutter, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(now)),
+            style = CtrlType.Readout,
+            color = CtrlColors.Text,
+        )
+        Text(
+            r.label.ifBlank { stringResource(R.string.alarm) },
+            style = MaterialTheme.typography.titleMedium,
+            color = CtrlColors.Muted,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(16.dp))
+        ChallengePanel(r.challenge, key = r.startedAt) {
+            RingService.send(context, RingService.ACTION_DISMISS, r.id)
+        }
+        Spacer(Modifier.height(16.dp))
+        Row(Modifier.fillMaxWidth().widthIn(max = 480.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Big(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.back), CtrlColors.Surface, CtrlColors.Text, Modifier.weight(1f), onClick = onBack)
+            Big(Icons.Outlined.Snooze, stringResource(R.string.snooze), CtrlColors.Accent, CtrlColors.OnAccent, Modifier.weight(1f)) {
+                RingService.send(context, RingService.ACTION_SNOOZE, r.id)
+            }
+        }
     }
 }
 

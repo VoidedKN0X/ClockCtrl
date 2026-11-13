@@ -7,6 +7,9 @@ Clock app (alarms, world clock, timers, stopwatch) in the VKNXWorks Ctrl series.
 - `data/ClockStore.kt`: alarms, timers, stopwatch, cities and alarm settings; `Alarm.next()` computes the next ring.
 - `alarm/Scheduler.kt`: AlarmManager (`setAlarmClock` for alarms, exact alarms for timers and snoozes). `alarm/Receivers.kt`: ring, boot/time-change and notification-action receivers, plus the `Alarms`/`Timers`/`Watch` actions.
 - `alarm/RingService.kt`: plays and vibrates while ringing (foreground, mediaPlayback). `alarm/AlarmActivity.kt`: the ringing screen over the lock screen. `alarm/Notifications.kt`: channels and notifications.
+- Sunrise alarms: `alarm/SunriseMath.kt` (pre-alarm timing and colours, unit-tested), `alarm/Sunrise.kt` (the pre-alarm: full-screen or quiet notification), `alarm/SunriseActivity.kt` (the sunrise page, directBootAware). The pre-alarm is a second exact alarm (`setExactAndAllowWhileIdle`), never an alarm clock of its own.
+- Dismiss sums: `alarm/Challenge.kt` (generator and 3-wrong-answers rule, unit-tested), `alarm/ChallengeUi.kt` (sum and keypad). Snooze is never guarded.
+- Unit tests in `app/src/test` (`testReleaseUnitTest`).
 - `ApiActivity.kt`: SET_ALARM / SET_TIMER / DISMISS_ALARM / SNOOZE_ALARM from other apps (needs the SET_ALARM permission).
 - `ui/alarms`, `ui/world`, `ui/timer`: the four tabs (Alarms, Clock, Timer, Stopwatch).
 

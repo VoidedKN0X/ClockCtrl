@@ -48,7 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vknxworks.clockctrl.R
 import com.vknxworks.clockctrl.alarm.Alarms
+import com.vknxworks.clockctrl.alarm.Level
 import com.vknxworks.clockctrl.alarm.Scheduler
+import com.vknxworks.clockctrl.alarm.SunriseMath
+import com.vknxworks.clockctrl.ui.components.GroupChoice
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.WbSunny
 import com.vknxworks.clockctrl.container
 import com.vknxworks.clockctrl.data.Alarm
 import com.vknxworks.clockctrl.data.ClockStore
@@ -90,6 +95,8 @@ fun AlarmEditScreen(id: Int) {
     var label by remember { mutableStateOf(start.label) }
     var ringtone by remember { mutableStateOf(start.ringtone) }
     var vibrate by remember { mutableStateOf(start.vibrate) }
+    var sunrise by remember { mutableStateOf(start.sunriseMinutes) }
+    var challenge by remember { mutableStateOf(start.challenge) }
     var confirmDelete by remember { mutableStateOf(false) }
     val pickSound = rememberSoundPicker { ringtone = it }
 
@@ -98,7 +105,7 @@ fun AlarmEditScreen(id: Int) {
         val changed = original == null || original.hour != time.hour || original.minute != time.minute || original.days != days
         return start.copy(
             hour = time.hour, minute = time.minute, days = days, enabled = true, label = label.trim(),
-            ringtone = ringtone, vibrate = vibrate,
+            ringtone = ringtone, vibrate = vibrate, sunriseMinutes = sunrise, challenge = challenge,
             skipUntil = if (changed) 0L else start.skipUntil,
             date = if (changed) null else start.date,
         )
@@ -187,6 +194,27 @@ fun AlarmEditScreen(id: Int) {
                         },
                     )
                 }
+            }
+
+            Group(stringResource(R.string.group_wake_up), footer = stringResource(R.string.wake_up_footer)) {
+                GroupChoice(
+                    stringResource(R.string.sunrise),
+                    listOf(0 to stringResource(R.string.sunrise_off)) + SunriseMath.CHOICES.map { it to stringResource(R.string.sunrise_before, it) },
+                    sunrise,
+                    icon = Icons.Outlined.WbSunny,
+                    fallbackLabel = stringResource(R.string.sunrise_before, sunrise),
+                ) { sunrise = it }
+                GroupChoice(
+                    stringResource(R.string.challenge),
+                    listOf(
+                        Level.OFF to stringResource(R.string.challenge_off),
+                        Level.EASY to stringResource(R.string.challenge_easy),
+                        Level.MEDIUM to stringResource(R.string.challenge_medium),
+                        Level.HARD to stringResource(R.string.challenge_hard),
+                    ),
+                    challenge,
+                    icon = Icons.Outlined.Calculate,
+                ) { challenge = it }
             }
         }
     }

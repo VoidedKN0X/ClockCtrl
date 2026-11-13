@@ -22,8 +22,8 @@ android {
         minSdk = 35
         targetSdk = 36
         // Bump both to publish a new release (see CHANGELOG.md).
-        versionCode = 8
-        versionName = "0.1.7"
+        versionCode = 9
+        versionName = "0.2.0"
         // 64-bit ARM phones only (arm64-v8a), like every Ctrl app.
         ndk { abiFilters += listOf("arm64-v8a") }
     }
@@ -86,8 +86,10 @@ android {
 }
 
 kotlin {
-    jvmToolchain(17)
+    // Java 17 bytecode from any JDK 17+ (like the other Ctrl apps), so unit tests also run where only a newer
+    // JDK is installed.
     compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         optIn.addAll(
             "androidx.compose.material3.ExperimentalMaterial3Api",
             "androidx.compose.foundation.ExperimentalFoundationApi",
@@ -124,4 +126,6 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+
+    testImplementation(libs.junit)
 }

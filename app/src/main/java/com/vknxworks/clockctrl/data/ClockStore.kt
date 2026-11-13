@@ -29,6 +29,10 @@ data class Alarm(
     val date: String? = null,
     /** Skip the next ring of a repeating alarm, until this moment (epoch ms). */
     val skipUntil: Long = 0L,
+    /** Sunrise: the screen brightens for this many minutes before the alarm rings (0: off). */
+    val sunriseMinutes: Int = 0,
+    /** Dismiss only after solving a sum: 0 off, 1 easy, 2 medium, 3 hard. Snooze is never guarded. */
+    val challenge: Int = 0,
 ) {
     val repeating: Boolean get() = days.isNotEmpty()
 

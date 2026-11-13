@@ -19,6 +19,7 @@ import java.time.ZonedDateTime
 object Scheduler {
     private const val REQ_SNOOZE = 1_000_000
     private const val REQ_TIMER = 2_000_000
+    private const val REQ_SUNRISE = 3_000_000
 
     private fun am(context: Context) = context.getSystemService(AlarmManager::class.java)
 
@@ -45,20 +46,41 @@ object Scheduler {
         Notifications.updateStopwatch(context, data.stopwatch)
     }
 
+    private fun sunriseIntent(context: Context, id: Int): PendingIntent =
+        ringIntent(context, AlarmReceiver.ACTION_SUNRISE, id, REQ_SUNRISE + id)
+
     fun schedule(context: Context, alarm: Alarm) {
         val pi = ringIntent(context, AlarmReceiver.ACTION_RING, alarm.id, alarm.id)
+        val sunrise = sunriseIntent(context, alarm.id)
         val manager = am(context) ?: return
         val next = if (alarm.enabled) alarm.next() else null
         if (next == null) {
             manager.cancel(pi)
+            manager.cancel(sunrise)
+            Sunrise.stop(context, alarm.id)
             return
         }
-        setClock(context, next.toInstant().toEpochMilli(), pi)
+        val ringAt = next.toInstant().toEpochMilli()
+        setClock(context, ringAt, pi)
+        // Sunrise: a second, exact trigger that many minutes before the ring (not an alarm clock of its own, so
+        // the status bar and other apps still show the real alarm time).
+        val preAt = SunriseMath.preAlarmAt(ringAt, alarm.sunriseMinutes, System.currentTimeMillis())
+        if (preAt != null) {
+            runCatching { manager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, preAt, sunrise) }
+                .onFailure { runCatching { manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, preAt, sunrise) } }
+            Sunrise.stop(context, alarm.id)
+        } else {
+            manager.cancel(sunrise)
+            // A sunrise already under way for this same ring carries on; any other one ends.
+            Sunrise.stop(context, alarm.id, keepRingAt = if (alarm.sunriseMinutes > 0) ringAt else null)
+        }
     }
 
     fun cancel(context: Context, alarmId: Int) {
         am(context)?.cancel(ringIntent(context, AlarmReceiver.ACTION_RING, alarmId, alarmId))
         am(context)?.cancel(ringIntent(context, AlarmReceiver.ACTION_RING, alarmId, REQ_SNOOZE + alarmId))
+        am(context)?.cancel(sunriseIntent(context, alarmId))
+        Sunrise.stop(context, alarmId)
     }
 
     fun cancelSnooze(context: Context, alarmId: Int) {

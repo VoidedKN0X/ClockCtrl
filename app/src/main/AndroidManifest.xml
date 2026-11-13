@@ -89,6 +89,18 @@
             android:taskAffinity="${applicationId}.ringing"
             android:turnScreenOn="true" />
 
+        <!-- The sunrise before a sunrise alarm, over the lock screen, also before the first unlock. -->
+        <activity
+            android:name=".alarm.SunriseActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|density|uiMode"
+            android:directBootAware="true"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:taskAffinity="${applicationId}.sunrise"
+            android:turnScreenOn="true" />
+
         <service
             android:name=".alarm.RingService"
             android:directBootAware="true"

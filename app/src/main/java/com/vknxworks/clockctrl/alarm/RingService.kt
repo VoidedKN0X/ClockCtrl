@@ -23,7 +23,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /** What's ringing right now, for the alarm screen. */
-data class Ringing(val isTimer: Boolean, val id: Int, val label: String, val startedAt: Long)
+data class Ringing(
+    val isTimer: Boolean,
+    val id: Int,
+    val label: String,
+    val startedAt: Long,
+    /** Dismiss sum level (0: none). Snooze is never guarded. */
+    val challenge: Int = 0,
+)
 
 /**
  * Rings an alarm or a finished timer: sound on the alarm volume (growing louder if you chose that), vibration, and a
@@ -51,22 +58,25 @@ class RingService : Service() {
                 if (alarm == null) { finishIfIdle(); return START_NOT_STICKY }
                 // Set the next ring straight away, so a repeating alarm keeps working even if this one isn't stopped.
                 Scheduler.afterRing(this, id)
+                Sunrise.stop(this, id)
                 if (current != null && !current.isTimer) Notifications.missed(this, current.label)
-                ring(Ringing(false, id, alarm.label, System.currentTimeMillis()), alarm.ringtone, alarm.vibrate)
+                // After a sunrise the sound always fades in, even with "Gradually louder" off.
+                val gradual = ClockStore.data.value.gradualSeconds.let { if (alarm.sunriseMinutes > 0) maxOf(it, SUNRISE_FADE_SECONDS) else it }
+                ring(Ringing(false, id, alarm.label, System.currentTimeMillis(), alarm.challenge), alarm.ringtone, alarm.vibrate, gradual)
             }
             ACTION_TIMER -> {
                 val timer = ClockStore.load(this).timers.firstOrNull { it.id == id }
                 if (timer == null) { finishIfIdle(); return START_NOT_STICKY }
                 Timers.ringing(this, id)
                 val d = ClockStore.data.value
-                ring(Ringing(true, id, timer.label, System.currentTimeMillis()), d.timerRingtone, d.timerVibrate)
+                ring(Ringing(true, id, timer.label, System.currentTimeMillis()), d.timerRingtone, d.timerVibrate, 0)
             }
             ACTION_SNOOZE -> {
                 val r = _ringing.value
                 if (r != null && !r.isTimer) {
                     val minutes = ClockStore.load(this).snoozeMinutes
                     Scheduler.snooze(this, r.id, minutes)
-                    Notifications.snoozed(this, r.id, r.label, System.currentTimeMillis() + minutes * 60_000L)
+                    Notifications.snoozed(this, r.id, r.label, System.currentTimeMillis() + minutes * 60_000L, r.challenge)
                 }
                 stopRinging()
             }
@@ -84,7 +94,7 @@ class RingService : Service() {
         }.onFailure { runCatching { startForeground(Notifications.ID_RING, n) } }
     }
 
-    private fun ring(r: Ringing, ringtone: String?, vibrate: Boolean) {
+    private fun ring(r: Ringing, ringtone: String?, vibrate: Boolean, gradualSeconds: Int) {
         stopSound()
         _ringing.value = r
         foreground(r)
@@ -93,7 +103,7 @@ class RingService : Service() {
             startActivity(Intent(this, AlarmActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION))
         }
         val data = ClockStore.data.value
-        playSound(ringtone, if (r.isTimer) 0 else data.gradualSeconds)
+        playSound(ringtone, gradualSeconds)
         if (vibrate) startVibration()
         handler.removeCallbacksAndMessages(TIMEOUT)
         handler.postDelayed({
@@ -213,6 +223,7 @@ class RingService : Service() {
         const val ACTION_DISMISS = "com.vknxworks.clockctrl.ring.DISMISS"
         const val ACTION_STOP_TIMER = "com.vknxworks.clockctrl.ring.STOP_TIMER"
         private val TIMEOUT = Any()
+        private const val SUNRISE_FADE_SECONDS = 30
 
         private val _ringing = MutableStateFlow<Ringing?>(null)
         val ringing: StateFlow<Ringing?> = _ringing

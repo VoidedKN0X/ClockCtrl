@@ -14,11 +14,13 @@ class AlarmReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_RING -> RingService.start(context, RingService.ACTION_ALARM, id)
             ACTION_TIMER -> RingService.start(context, RingService.ACTION_TIMER, id)
+            ACTION_SUNRISE -> Sunrise.begin(context, id)
         }
     }
 
     companion object {
         const val ACTION_RING = "com.vknxworks.clockctrl.RING"
+        const val ACTION_SUNRISE = "com.vknxworks.clockctrl.SUNRISE"
         const val ACTION_TIMER = "com.vknxworks.clockctrl.TIMER_DONE"
         const val EXTRA_ID = "id"
     }

@@ -131,6 +131,8 @@ private fun AlarmCard(a: Alarm, firstDay: java.time.DayOfWeek, now: Long, onClic
                     a.label.ifBlank { null },
                     if (on) a.next()?.let { untilText(context, it.toInstant().toEpochMilli() - now) } else null,
                     if (on && a.skipUntil > now) stringResource(R.string.skipping_next) else null,
+                    if (a.sunriseMinutes > 0) stringResource(R.string.sunrise_short) else null,
+                    if (a.challenge > 0) stringResource(R.string.challenge_short) else null,
                 ).joinToString(" · ")
                 if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = CtrlColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }

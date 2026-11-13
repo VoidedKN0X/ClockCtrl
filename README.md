@@ -16,6 +16,8 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Alarms** that repeat on the days you pick or ring once, with a label, their own sound (or silent) and vibration. Skip just the next ring of a repeating alarm, and see how long until each alarm rings
 - **Reliable ringing:** alarms use Android's alarm clock scheduling, ring at alarm volume through Do Not Disturb, show over the lock screen, ring after a restart before you unlock, and are set again after a time zone or clock change
 - **Ringing screen** with Snooze and Dismiss; the volume keys snooze. Snooze length, how long an alarm rings before it goes quiet, and gradually louder sound are in Settings; an alarm that goes quiet leaves a missed alarm notification
+- **Sunrise alarm** (per alarm): 5 to 30 minutes before the alarm, the screen slowly brightens from a deep warm colour to bright white over the lock screen, then the sound fades in. If you're using the phone then, a quiet notification shows instead
+- **Solve a sum to dismiss** (per alarm): an easy, medium or hard sum with a large keypad and TalkBack support; Snooze stays one tap, and after 3 wrong answers you get a new sum
 - **World clock:** your local time and date, the next alarm, and any cities you add with the difference to your time
 - **Timers:** type a time or tap a preset, run several at once, pause, add a minute, reset and name them. Running timers show a live countdown in the notification with Pause and +1 min
 - **Stopwatch** with laps (fastest and slowest marked), kept running in a notification while you use other apps

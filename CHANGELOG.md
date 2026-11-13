@@ -4,6 +4,16 @@ What changed in each ClockCtrl release. Every release on the [Releases page](htt
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.2.0 (2026-11-13)
+
+Two new ways to wake up, both set per alarm under **Waking up** when you add or change an alarm.
+
+### New
+
+- **Sunrise alarm.** Choose 5, 10, 15 or 30 minutes and, that long before the alarm, ClockCtrl shows a full-screen page over the lock screen that slowly turns from a deep warm red through orange to bright white while the screen brightens. It's silent; at the alarm time the alarm rings as usual and its sound fades in (over at least 30 seconds, even with "Gradually louder" off). If you're using the phone when the sunrise starts, it doesn't take over the screen: a quiet notification shows instead, and tapping it opens the sunrise. The sunrise follows Do Not Disturb the same way alarms do, works before the phone is unlocked after a restart, and stops by itself if you switch the alarm off, skip it, change it or delete it. Already awake? **I'm awake** on the sunrise page (or **Skip this alarm** in the notification) skips that ring; a repeating alarm rings as usual next time.
+- **Solve a sum to dismiss.** Choose Easy (like 7 + 12), Medium (like 47 + 36 or 7 × 8) or Hard (like 7 × 14 + 38). When the alarm rings, Dismiss shows the sum with a large number keypad; Snooze is still one tap, and so are the volume keys. After 3 wrong answers you get a new sum, so you're never stuck. The alarm keeps ringing at your alarm volume while you solve it and still goes quiet after your "Silence after" time. TalkBack reads the sum aloud ("What is 7 plus 12?"), your answer and whether it was right. With a sum, the Dismiss buttons on the ringing and snoozed notifications are left out (Snooze stays; you can still switch the alarm off in the app), skipping from the sunrise needs the sum too, and "dismiss alarm" from an assistant or another app shows the alarm screen instead of dismissing it.
+- The alarm list shows "Sunrise" and "Sum to dismiss" under alarms that use them.
+
 ## v0.1.7 (2026-11-13)
 
 A small security update. Alarms, timers and everything else work as before.
