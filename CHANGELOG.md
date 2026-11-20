@@ -4,6 +4,19 @@ What changed in each ClockCtrl release. Every release on the [Releases page](htt
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Built and checked by CI only: nothing here had been run on a phone when it was written.
+
+### Changed
+
+- **The alarm screen no longer waits for the alarm sound to be opened.** When an alarm or timer goes off, ClockCtrl used to open the sound file first and only then get on with showing the ringing screen; a slow sound file (a large one, or storage that is still waking up after a restart) held everything up, and one that never finished opening could freeze the app with no sound at all. The sound file is now opened in the background. The sounds are still tried in the same order (your chosen sound, the phone's alarm sound, the standard alarm sound, the ringtone) and the first one that opens plays, exactly as before; the phone is kept awake the whole time.
+
+### Fixed
+
+- **An alarm can no longer stay silent because its sound won't open.** If no sound is playing 2 seconds after the alarm went off, the built-in beep starts on the alarm volume and keeps going until the sound file is ready (the sound then takes over) or, when it never is, for as long as the alarm rings. As before, the beep also starts straight away when none of the sound files can be opened.
+- **If the alarm sound breaks while it is ringing** (for example because Android's media service restarts), the built-in beep takes over instead of the alarm going quiet.
+
 ## v0.2.1 (2026-11-20)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

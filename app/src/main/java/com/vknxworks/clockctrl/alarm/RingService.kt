@@ -15,6 +15,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -41,6 +42,12 @@ data class Ringing(
 class RingService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var player: MediaPlayer? = null
+
+    /** The sound file that is being opened right now, if any; it becomes [player] once it is ready. */
+    private var pending: MediaPlayer? = null
+
+    /** Goes up every time the sound is stopped; answers that arrive for an earlier sound are ignored. Main thread only. */
+    private var soundGen = 0
     private var tone: ToneGenerator? = null
     private var vibrator: Vibrator? = null
     private var focus: AudioFocusRequest? = null
@@ -156,44 +163,122 @@ class RingService : Service() {
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),
         )
-        for (uri in candidates) {
-            val mp = runCatching {
-                MediaPlayer().apply {
-                    setAudioAttributes(audioAttributes())
-                    setDataSource(this@RingService, uri)
-                    isLooping = true
-                    prepare()
-                }
-            }.getOrNull() ?: continue
-            player = mp
-            volume = if (gradualSeconds > 0) 0.05f else 1f
-            mp.setVolume(volume, volume)
-            mp.start()
-            if (gradualSeconds > 0) {
-                val step = 1f / gradualSeconds
-                val ramp = object : Runnable {
-                    override fun run() {
-                        val p = player ?: return
-                        volume = (volume + step).coerceAtMost(1f)
-                        runCatching { p.setVolume(volume, volume) }
-                        if (volume < 1f) handler.postDelayed(this, 1000)
-                    }
-                }
-                handler.postDelayed(ramp, 1000)
-            }
+        // Opening a sound file can take a while (or, rarely, never finish), so it is prepared in the background and
+        // this thread stays free for the alarm screen. If nothing is playing after PREPARE_WATCHDOG_MS, the built-in
+        // beep starts and keeps going until a sound file is ready (or for the whole ring when none ever is).
+        val gen = soundGen
+        handler.postDelayed({ if (gen == soundGen && player == null) startBeep() }, PREPARE_WATCHDOG_MS)
+        prepareNext(candidates, 0, gradualSeconds, gen)
+    }
+
+    /**
+     * Tries the sound files in [candidates] from [index] on, one at a time and in the same order as always: the
+     * first one that opens is played; when none opens, the built-in beep rings instead. [gen] is the value of
+     * [soundGen] when this ring started: once the sound has been stopped (or another ring took over) it no longer
+     * matches and nothing here does anything any more.
+     */
+    private fun prepareNext(candidates: List<Uri>, index: Int, gradualSeconds: Int, gen: Int) {
+        if (gen != soundGen) return
+        if (index >= candidates.size) {
+            // No sound file could be opened (for example right after a restart, before media storage is up).
+            if (player == null) startBeep()
             return
         }
-        // No sound file could be opened (for example right after a restart, before media storage is up):
-        // a built-in beep on the alarm volume, so an alarm is never silent.
+        val mp = runCatching { MediaPlayer() }.getOrNull()
+        if (mp == null) { prepareNext(candidates, index + 1, gradualSeconds, gen); return }
+        // Only the first answer for this file counts: ready, failed, or an exception while setting it up.
+        var settled = false
+        val started = runCatching {
+            mp.setAudioAttributes(audioAttributes())
+            mp.setDataSource(this@RingService, candidates[index])
+            mp.isLooping = true
+            mp.setOnPreparedListener { ready ->
+                if (!settled) {
+                    settled = true
+                    if (gen != soundGen || pending !== ready) {
+                        // Stopped in the meantime; stopSound() has already let go of it.
+                        runCatching { ready.release() }
+                    } else {
+                        pending = null
+                        if (!startPlayer(ready, gradualSeconds)) prepareNext(candidates, index + 1, gradualSeconds, gen)
+                    }
+                }
+            }
+            mp.setOnErrorListener { failed, _, _ ->
+                if (!settled) {
+                    // This file can't be opened: on to the next one.
+                    settled = true
+                    runCatching { failed.release() }
+                    if (gen == soundGen && pending === failed) {
+                        pending = null
+                        prepareNext(candidates, index + 1, gradualSeconds, gen)
+                    }
+                } else if (gen == soundGen && player === failed) {
+                    // The sound broke while ringing: the built-in beep takes over, so the alarm doesn't go quiet.
+                    player = null
+                    runCatching { failed.release() }
+                    startBeep()
+                }
+                true
+            }
+            pending = mp
+            mp.prepareAsync()
+        }.isSuccess
+        if (!started && !settled) {
+            settled = true
+            if (pending === mp) pending = null
+            runCatching { mp.release() }
+            prepareNext(candidates, index + 1, gradualSeconds, gen)
+        }
+    }
+
+    /** Starts a prepared sound (growing louder if asked) and ends the stand-in beep. False when it would not start. */
+    private fun startPlayer(mp: MediaPlayer, gradualSeconds: Int): Boolean {
+        volume = if (gradualSeconds > 0) 0.05f else 1f
+        val ok = runCatching {
+            mp.setVolume(volume, volume)
+            mp.start()
+        }.isSuccess
+        if (!ok) {
+            runCatching { mp.release() }
+            return false
+        }
+        // The beep may have been bridging the wait.
+        stopBeep()
+        player = mp
+        if (gradualSeconds > 0) {
+            val step = 1f / gradualSeconds
+            val ramp = object : Runnable {
+                override fun run() {
+                    val p = player ?: return
+                    volume = (volume + step).coerceAtMost(1f)
+                    runCatching { p.setVolume(volume, volume) }
+                    if (volume < 1f) handler.postDelayed(this, 1000)
+                }
+            }
+            handler.postDelayed(ramp, 1000)
+        }
+        return true
+    }
+
+    /** The built-in beep on the alarm volume, so an alarm is never silent. Does nothing when it is already beeping. */
+    private fun startBeep() {
+        if (tone != null) return
         tone = runCatching { ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME) }.getOrNull()
         val beep = object : Runnable {
             override fun run() {
                 val t = tone ?: return
                 runCatching { t.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 800) }
-                handler.postDelayed(this, 1500)
+                handler.postDelayed(this, BEEP, 1500)
             }
         }
-        handler.post(beep)
+        handler.postAtTime(beep, BEEP, SystemClock.uptimeMillis())
+    }
+
+    private fun stopBeep() {
+        handler.removeCallbacksAndMessages(BEEP)
+        tone?.let { runCatching { it.stopTone() }; runCatching { it.release() } }
+        tone = null
     }
 
     private fun startVibration() {
@@ -204,7 +289,16 @@ class RingService : Service() {
     }
 
     private fun stopSound() {
+        // Anything still on its way for the sound that ends here (a file being opened, the watchdog) is void from now on.
+        soundGen++
         handler.removeCallbacksAndMessages(null)
+        pending?.let { p ->
+            pending = null
+            runCatching { p.setOnPreparedListener(null) }
+            runCatching { p.setOnErrorListener(null) }
+            // Letting go of a file that is stuck opening can itself hang, so that never happens on this thread.
+            runCatching { Thread({ runCatching { p.release() } }, "ClockCtrl-ring-release").apply { isDaemon = true }.start() }
+        }
         player?.let { runCatching { it.stop() }; runCatching { it.release() } }
         player = null
         tone?.let { runCatching { it.stopTone() }; runCatching { it.release() } }
@@ -249,6 +343,10 @@ class RingService : Service() {
         const val ACTION_DISMISS = "com.vknxworks.clockctrl.ring.DISMISS"
         const val ACTION_STOP_TIMER = "com.vknxworks.clockctrl.ring.STOP_TIMER"
         private val TIMEOUT = Any()
+        private val BEEP = Any()
+
+        /** How long a sound file may take to open before the built-in beep starts in its place. */
+        private const val PREPARE_WATCHDOG_MS = 2_000L
         private const val SUNRISE_FADE_SECONDS = 30
 
         /** Extra time the wake lock may outlast the ring time limit, so the limit itself always gets to run. */
