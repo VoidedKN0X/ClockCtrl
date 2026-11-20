@@ -12,6 +12,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.concurrent.Executors
 
 @Serializable
 data class Alarm(
@@ -138,18 +139,50 @@ object ClockStore {
         synchronized(lock) {
             load(context)
             val next = transform(_data.value)
-            val f = file(context)
-            val out = runCatching { f.startWrite() }.getOrNull()
-            if (out != null) {
-                try {
-                    out.write(json.encodeToString(ClockData.serializer(), next).toByteArray(Charsets.UTF_8))
-                    f.finishWrite(out)
-                } catch (e: Exception) {
-                    f.failWrite(out)
-                }
-            }
+            write(context, next)
             _data.value = next
             return next
+        }
+    }
+
+    /**
+     * Changes the data at once but saves it a moment later on a background thread, so a tap doesn't wait for the
+     * disk. Only for the stopwatch buttons in the open app: alarms and timers always use [update].
+     *
+     * The background save writes whatever the newest data is when it runs, under the same lock as [update],
+     * so it can never put an older state over a newer one, whatever order the saves happen in.
+     */
+    fun updateDeferred(context: Context, transform: (ClockData) -> ClockData): ClockData {
+        val app = context.applicationContext
+        val next = synchronized(lock) {
+            load(app)
+            transform(_data.value).also { _data.value = it }
+        }
+        runCatching {
+            saver.execute {
+                runCatching { synchronized(lock) { write(app, _data.value) } }
+            }
+        }.onFailure {
+            // The background thread couldn't take the job: save here instead.
+            synchronized(lock) { write(app, _data.value) }
+        }
+        return next
+    }
+
+    /** One thread, so deferred saves run one after the other. */
+    private val saver = Executors.newSingleThreadExecutor()
+
+    /** Writes [data] to the file. Call with [lock] held. */
+    private fun write(context: Context, data: ClockData) {
+        val f = file(context)
+        val out = runCatching { f.startWrite() }.getOrNull()
+        if (out != null) {
+            try {
+                out.write(json.encodeToString(ClockData.serializer(), data).toByteArray(Charsets.UTF_8))
+                f.finishWrite(out)
+            } catch (e: Exception) {
+                f.failWrite(out)
+            }
         }
     }
 

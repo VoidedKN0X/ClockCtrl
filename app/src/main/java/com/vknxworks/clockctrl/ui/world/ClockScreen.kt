@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -58,6 +59,8 @@ import com.vknxworks.clockctrl.ui.nav.LocalNavigator
 import com.vknxworks.clockctrl.ui.theme.CtrlColors
 import com.vknxworks.clockctrl.ui.theme.CtrlType
 import com.vknxworks.clockctrl.ui.theme.Gutter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -168,11 +171,14 @@ fun CityPickerScreen() {
     val nav = LocalNavigator.current
     val data by ClockStore.data.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
-    val all = remember {
-        ZoneId.getAvailableZoneIds()
-            .filter { it.contains('/') && !it.startsWith("Etc/") && !it.startsWith("SystemV/") && !it.startsWith("US/") && !it.startsWith("Canada/") }
-            .map { it to zoneLabel(it) }
-            .sortedBy { cityName(it.first) }
+    // Some 400 time zones with their names: put together off the main thread, so opening this screen doesn't stutter.
+    val all by produceState(initialValue = emptyList<Pair<String, String>>()) {
+        value = withContext(Dispatchers.Default) {
+            ZoneId.getAvailableZoneIds()
+                .filter { it.contains('/') && !it.startsWith("Etc/") && !it.startsWith("SystemV/") && !it.startsWith("US/") && !it.startsWith("Canada/") }
+                .map { it to zoneLabel(it) }
+                .sortedBy { cityName(it.first) }
+        }
     }
     val shown = remember(query, all) {
         val q = query.trim().lowercase()

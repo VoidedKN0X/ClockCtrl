@@ -151,15 +151,23 @@ object Timers {
     fun ringing(context: Context, id: Int) = change(context, id) { it.copy(ringing = true, remainingMs = 0L, endAt = 0L) }
 }
 
-/** Stopwatch actions. */
+/**
+ * Stopwatch actions. [fromApp] is for the buttons on the Stopwatch tab: the change shows at once and is saved a
+ * moment later in the background, so a tap never waits for the disk. Notification buttons save straight away,
+ * because Android may stop the app right after handling them.
+ */
 object Watch {
-    private fun set(context: Context, f: (Stopwatch) -> Stopwatch) {
-        val d = ClockStore.update(context) { d -> d.copy(stopwatch = f(d.stopwatch)) }
+    private fun set(context: Context, fromApp: Boolean, f: (Stopwatch) -> Stopwatch) {
+        val change = { d: com.vknxworks.clockctrl.data.ClockData -> d.copy(stopwatch = f(d.stopwatch)) }
+        val d = if (fromApp) ClockStore.updateDeferred(context, change) else ClockStore.update(context, change)
         Notifications.updateStopwatch(context, d.stopwatch)
     }
 
-    fun start(context: Context) = set(context) { if (it.running) it else it.copy(runningSince = System.currentTimeMillis()) }
-    fun pause(context: Context) = set(context) { if (!it.running) it else Stopwatch(0L, it.elapsed(), it.laps) }
-    fun lap(context: Context) = set(context) { if (!it.running || it.laps.size >= 999) it else it.copy(laps = it.laps + it.elapsed()) }
-    fun reset(context: Context) = set(context) { Stopwatch() }
+    fun start(context: Context, fromApp: Boolean = false) =
+        set(context, fromApp) { if (it.running) it else it.copy(runningSince = System.currentTimeMillis()) }
+    fun pause(context: Context, fromApp: Boolean = false) =
+        set(context, fromApp) { if (!it.running) it else Stopwatch(0L, it.elapsed(), it.laps) }
+    fun lap(context: Context, fromApp: Boolean = false) =
+        set(context, fromApp) { if (!it.running || it.laps.size >= 999) it else it.copy(laps = it.laps + it.elapsed()) }
+    fun reset(context: Context, fromApp: Boolean = false) = set(context, fromApp) { Stopwatch() }
 }

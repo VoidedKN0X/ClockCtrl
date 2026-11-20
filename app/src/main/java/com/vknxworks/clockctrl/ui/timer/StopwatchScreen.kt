@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +41,7 @@ import com.vknxworks.clockctrl.R
 import com.vknxworks.clockctrl.alarm.Watch
 import com.vknxworks.clockctrl.alarm.formatMs
 import com.vknxworks.clockctrl.data.ClockStore
+import com.vknxworks.clockctrl.data.Stopwatch
 import com.vknxworks.clockctrl.ui.common.rememberNow
 import com.vknxworks.clockctrl.ui.components.TabTitle
 import com.vknxworks.clockctrl.ui.components.bottomClearance
@@ -54,38 +56,36 @@ fun StopwatchScreen() {
     val context = LocalContext.current
     val data by ClockStore.data.collectAsStateWithLifecycle()
     val sw = data.stopwatch
-    val now = rememberNow(if (sw.running) 40L else 1000L)
-    val elapsed = sw.elapsed(now)
-    // Each lap's own time: the split minus the one before it.
-    val lapTimes = sw.laps.mapIndexed { i, total -> total - (if (i == 0) 0L else sw.laps[i - 1]) }
-    val best = if (lapTimes.size > 1) lapTimes.indexOf(lapTimes.min()) else -1
-    val worst = if (lapTimes.size > 1) lapTimes.indexOf(lapTimes.max()) else -1
+    val laps = sw.laps
+    // Each lap's own time: the split minus the one before it. Worked out when a lap is added, not on every tick.
+    val lapTimes = remember(laps) { laps.mapIndexed { i, total -> total - (if (i == 0) 0L else laps[i - 1]) } }
+    val best = remember(lapTimes) { if (lapTimes.size > 1) lapTimes.indexOf(lapTimes.min()) else -1 }
+    val worst = remember(lapTimes) { if (lapTimes.size > 1) lapTimes.indexOf(lapTimes.max()) else -1 }
+    val ordered = remember(lapTimes) { lapTimes.withIndex().reversed() }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         TabTitle(stringResource(R.string.tab_stopwatch))
         Column(Modifier.fillMaxWidth().padding(horizontal = Gutter, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(formatMs(elapsed, hundredths = true), style = CtrlType.Hero.copy(fontSize = if (elapsed >= 3_600_000L) 48.sp else 64.sp), color = CtrlColors.Text, maxLines = 1)
-            if (sw.running && sw.laps.isNotEmpty()) {
-                Text(stringResource(R.string.lap_n, sw.laps.size + 1) + " · " + formatMs(elapsed - sw.laps.last(), hundredths = true), style = CtrlType.Data, color = CtrlColors.Muted)
-            }
+            // The running time redraws many times a second; it has its own composable so the rest doesn't.
+            StopwatchReadout(sw)
             Spacer(Modifier.height(18.dp))
             Row(Modifier.widthIn(max = 420.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 when {
                     sw.running -> {
-                        Btn(stringResource(R.string.lap), Icons.Outlined.Flag, accent = false, Modifier.weight(1f)) { Watch.lap(context) }
-                        Btn(stringResource(R.string.pause), Icons.Outlined.Pause, accent = true, Modifier.weight(1f)) { Watch.pause(context) }
+                        Btn(stringResource(R.string.lap), Icons.Outlined.Flag, accent = false, Modifier.weight(1f)) { Watch.lap(context, fromApp = true) }
+                        Btn(stringResource(R.string.pause), Icons.Outlined.Pause, accent = true, Modifier.weight(1f)) { Watch.pause(context, fromApp = true) }
                     }
-                    elapsed > 0 -> {
-                        Btn(stringResource(R.string.reset), Icons.Outlined.Replay, accent = false, Modifier.weight(1f)) { Watch.reset(context) }
-                        Btn(stringResource(R.string.resume), Icons.Outlined.PlayArrow, accent = true, Modifier.weight(1f)) { Watch.start(context) }
+                    // Stopped with time on the clock.
+                    sw.accumulatedMs > 0 -> {
+                        Btn(stringResource(R.string.reset), Icons.Outlined.Replay, accent = false, Modifier.weight(1f)) { Watch.reset(context, fromApp = true) }
+                        Btn(stringResource(R.string.resume), Icons.Outlined.PlayArrow, accent = true, Modifier.weight(1f)) { Watch.start(context, fromApp = true) }
                     }
-                    else -> Btn(stringResource(R.string.start), Icons.Outlined.PlayArrow, accent = true, Modifier.weight(1f)) { Watch.start(context) }
+                    else -> Btn(stringResource(R.string.start), Icons.Outlined.PlayArrow, accent = true, Modifier.weight(1f)) { Watch.start(context, fromApp = true) }
                 }
             }
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)) {
-            val ordered = lapTimes.withIndex().reversed()
-            itemsIndexed(ordered.toList(), key = { _, it -> it.index }) { _, (i, lap) ->
+            itemsIndexed(ordered, key = { _, it -> it.index }) { _, (i, lap) ->
                 val color = when (i) {
                     best -> CtrlColors.AccentText
                     worst -> CtrlColors.Error
@@ -94,11 +94,22 @@ fun StopwatchScreen() {
                 Row(Modifier.fillMaxWidth().topDivider().padding(horizontal = Gutter, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.lap_n, i + 1), style = MaterialTheme.typography.bodyLarge, color = color, modifier = Modifier.weight(1f))
                     Text(formatMs(lap, hundredths = true), style = CtrlType.Data.copy(fontSize = 15.sp), color = color, modifier = Modifier.padding(end = 18.dp))
-                    Text(formatMs(sw.laps[i], hundredths = true), style = CtrlType.Data.copy(fontSize = 15.sp), color = CtrlColors.Muted)
+                    Text(formatMs(laps[i], hundredths = true), style = CtrlType.Data.copy(fontSize = 15.sp), color = CtrlColors.Muted)
                 }
             }
             item { Spacer(Modifier.bottomClearance(0.dp)) }
         }
+    }
+}
+
+/** The running time, and the current lap's time under it while laps are being taken. */
+@Composable
+private fun StopwatchReadout(sw: Stopwatch) {
+    val now = rememberNow(if (sw.running) 40L else 1000L)
+    val elapsed = sw.elapsed(now)
+    Text(formatMs(elapsed, hundredths = true), style = CtrlType.Hero.copy(fontSize = if (elapsed >= 3_600_000L) 48.sp else 64.sp), color = CtrlColors.Text, maxLines = 1)
+    if (sw.running && sw.laps.isNotEmpty()) {
+        Text(stringResource(R.string.lap_n, sw.laps.size + 1) + " · " + formatMs(elapsed - sw.laps.last(), hundredths = true), style = CtrlType.Data, color = CtrlColors.Muted)
     }
 }
 

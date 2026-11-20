@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -44,6 +45,9 @@ class RingService : Service() {
     private var vibrator: Vibrator? = null
     private var focus: AudioFocusRequest? = null
     private var volume = 1f
+
+    /** Keeps the processor awake while something rings, so the sound, the fade-in and the time limit keep running with the screen off. */
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -103,6 +107,9 @@ class RingService : Service() {
             startActivity(Intent(this, AlarmActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION))
         }
         val data = ClockStore.data.value
+        val ringMs = data.ringMinutes.coerceIn(1, 60) * 60_000L
+        // Awake for as long as this can ring (plus a margin); released when the ringing stops.
+        holdAwake(ringMs + WAKE_MARGIN_MS)
         playSound(ringtone, gradualSeconds)
         if (vibrate) startVibration()
         handler.removeCallbacksAndMessages(TIMEOUT)
@@ -112,7 +119,24 @@ class RingService : Service() {
                 if (!now.isTimer) Notifications.missed(this, now.label)
                 stopRinging()
             }
-        }, TIMEOUT, data.ringMinutes.coerceIn(1, 60) * 60_000L)
+        }, TIMEOUT, ringMs)
+    }
+
+    /** Takes the wake lock for [ms] at most (Android lets go of it by itself after that), replacing an earlier one. */
+    private fun holdAwake(ms: Long) {
+        val old = wakeLock
+        wakeLock = runCatching {
+            getSystemService(PowerManager::class.java)?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ClockCtrl:ring")?.apply {
+                setReferenceCounted(false)
+                acquire(ms)
+            }
+        }.getOrNull()
+        old?.let { runCatching { if (it.isHeld) it.release() } }
+    }
+
+    private fun releaseAwake() {
+        wakeLock?.let { runCatching { if (it.isHeld) it.release() } }
+        wakeLock = null
     }
 
     private fun audioAttributes() = AudioAttributes.Builder()
@@ -200,6 +224,7 @@ class RingService : Service() {
             ClockStore.update(this) { d -> d.copy(timers = d.timers.map { if (it.id == r.id && it.ringing) it.copy(ringing = false, remainingMs = it.lengthMs, endAt = 0L) else it }) }
             Notifications.updateTimers(this, ClockStore.data.value)
         }
+        releaseAwake()
         finishIfIdle()
     }
 
@@ -213,6 +238,7 @@ class RingService : Service() {
     override fun onDestroy() {
         stopSound()
         _ringing.value = null
+        releaseAwake()
         super.onDestroy()
     }
 
@@ -225,11 +251,24 @@ class RingService : Service() {
         private val TIMEOUT = Any()
         private const val SUNRISE_FADE_SECONDS = 30
 
+        /** Extra time the wake lock may outlast the ring time limit, so the limit itself always gets to run. */
+        private const val WAKE_MARGIN_MS = 60_000L
+
+        /** How long the phone is kept awake between an alarm going off and this service taking over. */
+        private const val START_WAKE_MS = 10_000L
+
         private val _ringing = MutableStateFlow<Ringing?>(null)
         val ringing: StateFlow<Ringing?> = _ringing
 
         fun start(context: Context, action: String, id: Int) {
             val i = Intent(context, RingService::class.java).setAction(action).putExtra(AlarmReceiver.EXTRA_ID, id)
+            // Android only keeps the phone awake until the alarm broadcast returns; the service starts a moment
+            // later. This short wake lock bridges that gap (it lets go by itself), then ring() takes its own.
+            runCatching {
+                context.getSystemService(PowerManager::class.java)
+                    ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ClockCtrl:ring-start")
+                    ?.acquire(START_WAKE_MS)
+            }
             runCatching { context.startForegroundService(i) }
         }
 

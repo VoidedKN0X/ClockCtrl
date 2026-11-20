@@ -75,6 +75,9 @@ fun TimerScreen() {
     var renaming by remember { mutableStateOf<Timer?>(null) }
     val now = rememberNow(250L)
     val showInput = adding || data.timers.isEmpty()
+    // Newest first; reversed when the timers change, not on every tick.
+    val timers = data.timers
+    val newestFirst = remember(timers) { timers.reversed() }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         TabTitle(
@@ -92,7 +95,7 @@ fun TimerScreen() {
             })
         } else {
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = Gutter, end = Gutter, top = 6.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(data.timers.reversed(), key = { it.id }) { t -> TimerCard(t, now, onRename = { renaming = t }) }
+                items(newestFirst, key = { it.id }) { t -> TimerCard(t, now, onRename = { renaming = t }) }
                 item { Spacer(Modifier.bottomClearance(0.dp)) }
             }
         }

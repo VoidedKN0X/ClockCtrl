@@ -4,6 +4,26 @@ What changed in each ClockCtrl release. Every release on the [Releases page](htt
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Not released yet: these changes are in the code and will ship with the next version. Alarms, timers, the stopwatch and the world clock work as before.
+
+### Fixed
+
+- **The phone is now kept awake while an alarm or timer rings.** ClockCtrl already had Android's "prevent phone from sleeping" permission for this, but never used it, so with the screen off the phone could doze off while ringing: the sound growing louder, the built-in beep that plays when no sound file can be opened and the "stop after so many minutes" limit all depend on the phone staying awake. ClockCtrl now holds a wake lock from the moment the alarm goes off (including the short moment before the ringing starts) until you snooze or stop it or the ring time runs out. Android releases it by itself one minute after the ring time limit at the latest, so it can never be left on.
+
+### Changed
+
+- **Smoother stopwatch.** While the stopwatch runs, only the running time is redrawn 25 times a second; the lap list and the buttons are left alone, and the fastest and slowest lap are worked out when a lap is added instead of on every tick. With many laps this saves a lot of work and battery.
+- **Stopwatch buttons respond at once.** Start, Pause, Lap and Reset on the Stopwatch tab no longer wait for the phone's storage before the screen reacts: the change shows immediately and is saved a moment later in the background. Alarms and timers, and the stopwatch buttons in the notification, are still saved straight away as before, and a background save always writes the newest data, so it can never undo a later change to an alarm or timer.
+- **The Timer tab** no longer re-sorts the timer list four times a second.
+- **Add city opens without a stutter.** The list of some 400 cities and their time zone names is put together in the background; it appears a moment after the screen opens.
+- **Opens with your settings already in place.** ClockCtrl now waits a few milliseconds (half a second at most) for your saved settings before it draws its first screen, so the clock no longer shows for a moment without seconds, or with the wrong first day of the week, and then changes. The ringing screen is not affected and shows at once, as before.
+
+### Privacy
+
+- **"Hide in screenshots" is on from the very first frame.** The app's window now starts hidden from screenshots and screen recordings, and that is lifted only once your saved settings say the switch is off. Before, the protection was switched on a few frames after the app opened.
+
 ## Project updates (2026-11-19)
 
 ### Project
