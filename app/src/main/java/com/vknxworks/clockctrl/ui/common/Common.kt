@@ -41,12 +41,12 @@ fun rememberNow(periodMs: Long = 1000L): Long {
 
 fun is24h(context: Context) = DateFormat.is24HourFormat(context)
 
-/** "07:30" (24 h) or "7:30" plus "AM" (12 h). */
+/** "07:30" (24 h) or "7:30" plus the phone language's AM/PM marker (12 h). */
 fun clockParts(context: Context, hour: Int, minute: Int): Pair<String, String?> =
     if (is24h(context)) "%02d:%02d".format(hour, minute) to null
     else {
         val h = if (hour % 12 == 0) 12 else hour % 12
-        "%d:%02d".format(h, minute) to (if (hour < 12) "AM" else "PM")
+        "%d:%02d".format(h, minute) to java.text.DateFormatSymbols.getInstance(Locale.getDefault()).amPmStrings[if (hour < 12) 0 else 1]
     }
 
 fun firstDay(start: WeekStart): DayOfWeek = when (start) {
