@@ -6,9 +6,18 @@ To publish a new version: bump `versionCode` and `versionName` in `app/build.gra
 
 ## Unreleased
 
-Changes on `main` that aren't in a release yet. They ship with the next version.
+Changes on `main` that aren't in a release yet. They ship with the next version. Built and checked by CI only; none of it has been run on a phone yet.
+
+### New
+
+- **A running timer in the status bar (Android 16 Live Updates).** On phones with Android 16's Live Updates (Android 16's first minor release, API level 36.1, and later), a running timer's notification asks to be shown as a Live Update: its countdown appears as a chip in the status bar and at the top of the lock screen, counting down by itself, the same way as the countdown in the notification. Paused timers are ordinary notifications. On older Android versions, or when Live Updates are off for ClockCtrl, the timer notification is exactly as before. **Settings → Timers → Timer in the status bar** shows whether it's on and opens Android's setting for it. This needs a new install-time permission, `POST_PROMOTED_NOTIFICATIONS` (no prompt).
+- **Lap export.** With laps on the stopwatch, **Copy laps** copies them as text (lap, lap time, total) and **Save as CSV** saves them as a CSV file in a place you pick, oldest lap first, times as h:mm:ss.cc.
+- **Alarm export and import.** **Settings → Export and import → Export alarms** saves all your alarms (time, days or date, label, sound, vibration, sunrise and dismiss sum) as a JSON file. **Import alarms** reads such a file and says how many alarms it has and how many you have now; **Add** sets them up next to yours, **Replace** deletes yours first. Every imported alarm is set with Android like an alarm you made yourself. A one-time alarm whose date has passed comes in switched off, and an alarm sound that doesn't exist on this phone becomes the default alarm sound. Files that aren't a ClockCtrl alarms file, have impossible values or come from a newer version are refused.
+- **Settings export and import.** **Export settings** saves the snooze length, silence after, gradual volume, timer vibration, first day of the week, seconds on the clock, Hide in screenshots / Hide in recent apps and your world clock cities. **Import settings** says what it will replace and asks first. It never touches the app lock or its PIN, can only turn Hide in screenshots and Hide in recent apps on (never off), and leaves your alarms, timers and timer sound alone; cities with a time zone this phone doesn't know are skipped.
 
 ### Project
+
+- **Tests** for reading and checking alarms and settings files and for the lap export (`BackupTest`). The parts that don't need the JSON library were run on a computer with the Kotlin compiler; CI builds the app but doesn't run the tests.
 
 - **Checksum list regenerated without the old entries.** `gradle/verification-metadata.xml` was regenerated on CI with the fixed workflow and committed exactly as printed (its SHA-256 matches the log). It now lists only the 378 components the build downloads today; the leftovers from earlier library and build-tool versions are gone.
 - **The checksum list no longer collects old entries.** The hand-started workflow that regenerates `gradle/verification-metadata.xml` used to add the new checksums to the existing file, so entries for library versions that are no longer used stayed in it. It now clears the old entries first and writes only what the build uses, and prints the file's SHA-256 so the copy that gets committed can be checked against the log. Nothing in the app changes.

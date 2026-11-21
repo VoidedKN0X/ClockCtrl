@@ -179,4 +179,55 @@
         <item quantity="one">%1$d minute</item>
         <item quantity="other">%1$d minutes</item>
     </plurals>
+
+    <!-- Live Updates (Android 16) -->
+    <string name="live_updates">Timer in the status bar</string>
+    <string name="live_updates_on">On: a running timer counts down as a Live Update chip in the status bar. Tap to change it in Android\'s settings.</string>
+    <string name="live_updates_off">Off for ClockCtrl. Tap to turn on Live Updates in Android\'s settings, so a running timer counts down in the status bar.</string>
+
+    <!-- Stopwatch laps -->
+    <string name="laps_copy">Copy laps</string>
+    <string name="laps_save">Save as CSV</string>
+    <string name="laps_saved">Laps saved as a CSV file</string>
+    <string name="laps_save_failed">Couldn\'t save the laps</string>
+    <string name="laps_col_lap">Lap</string>
+    <string name="laps_col_time">Lap time</string>
+    <string name="laps_col_total">Total</string>
+
+    <!-- Export and import -->
+    <string name="backup_title">Export and import</string>
+    <string name="backup_footer">Alarms and settings are saved as JSON files in a place you pick, to move them to another phone or keep a copy. A settings file never holds the app lock or its PIN, and importing one can\'t turn the app lock, Hide in screenshots or Hide in recent apps off. Timer sounds aren\'t included; an alarm sound that doesn\'t exist on this phone becomes the default alarm sound.</string>
+    <string name="backup_export_alarms">Export alarms</string>
+    <plurals name="backup_alarm_count">
+        <item quantity="one">%1$d alarm to a file</item>
+        <item quantity="other">%1$d alarms to a file</item>
+    </plurals>
+    <string name="backup_import_alarms">Import alarms</string>
+    <string name="backup_import_alarms_sub">Add the alarms from a ClockCtrl alarms file, or replace yours with them</string>
+    <string name="backup_export_settings">Export settings</string>
+    <string name="backup_export_settings_sub">Alarm and timer settings, the clock and your world clock cities</string>
+    <string name="backup_import_settings">Import settings</string>
+    <string name="backup_import_settings_sub">From a ClockCtrl settings file</string>
+    <string name="backup_import_alarms_title">Import alarms?</string>
+    <plurals name="backup_import_alarms_body">
+        <item quantity="one">The file from %2$s has %1$d alarm. It is set up as a new alarm, switched on or off as in the file.</item>
+        <item quantity="other">The file from %2$s has %1$d alarms. They are set up as new alarms, each switched on or off as in the file.</item>
+    </plurals>
+    <plurals name="backup_import_alarms_here">
+        <item quantity="one">You have %1$d alarm now. Add keeps it; Replace deletes it first.</item>
+        <item quantity="other">You have %1$d alarms now. Add keeps them; Replace deletes them first.</item>
+    </plurals>
+    <string name="backup_add">Add</string>
+    <string name="backup_replace">Replace</string>
+    <string name="backup_alarms_added">Alarms added</string>
+    <string name="backup_alarms_replaced">Your alarms were replaced</string>
+    <string name="backup_import_settings_title">Import settings?</string>
+    <string name="backup_import_settings_body">The settings from the file of %1$s replace these settings here: snooze length, silence after, gradual volume, vibration for timers, first day of the week, seconds on the clock and your world clock cities (%2$d in the file). Hide in screenshots and Hide in recent apps are only turned on, never off. Your alarms, timers, timer sound and app lock stay as they are.</string>
+    <string name="backup_restore_confirm">Import</string>
+    <string name="backup_saved">File saved</string>
+    <string name="backup_save_failed">Couldn\'t save the file</string>
+    <string name="backup_restored">Settings imported</string>
+    <string name="backup_restore_failed">Couldn\'t import the settings</string>
+    <string name="backup_not_valid">This isn\'t a ClockCtrl file of that kind, or it\'s damaged.</string>
+    <string name="backup_too_new">This file is from a newer ClockCtrl. Update ClockCtrl first.</string>
 </resources>

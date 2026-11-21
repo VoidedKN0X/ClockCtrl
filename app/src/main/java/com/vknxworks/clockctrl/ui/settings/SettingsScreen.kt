@@ -26,6 +26,11 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.outlined.Update
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.vknxworks.clockctrl.alarm.Notifications
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -69,6 +74,7 @@ fun SettingsScreen() {
             AlarmsGroup(settings) { set(it) }
             TimersGroup()
             ClockGroup(settings) { set(it) }
+            BackupGroup()
             PrivacyAndSecurityGroup(settings)
         }
     }
@@ -133,6 +139,27 @@ private fun TimersGroup() {
     Group(stringResource(R.string.group_timers)) {
         GroupRow(stringResource(R.string.timer_sound), soundName, icon = Icons.Outlined.MusicNote, showChevron = true, onClick = { pick(data.timerRingtone) })
         GroupSwitch(stringResource(R.string.vibrate), null, data.timerVibrate, Icons.Outlined.Vibration) { on -> ClockStore.update(context) { it.copy(timerVibrate = on) } }
+        // Android 16 Live Updates: a running timer's countdown as a chip in the status bar. Only where the phone has
+        // them; the state is read again whenever you come back from the phone's settings.
+        if (Notifications.liveUpdatesSupported()) {
+            var allowed by remember { mutableStateOf(Notifications.liveUpdatesAllowed(context)) }
+            LifecycleResumeEffect(Unit) {
+                allowed = Notifications.liveUpdatesAllowed(context)
+                onPauseOrDispose { }
+            }
+            GroupRow(
+                stringResource(R.string.live_updates),
+                stringResource(if (allowed) R.string.live_updates_on else R.string.live_updates_off),
+                icon = Icons.Outlined.Update,
+                showChevron = true,
+                onClick = {
+                    open(
+                        context,
+                        Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+                    )
+                },
+            )
+        }
     }
 }
 

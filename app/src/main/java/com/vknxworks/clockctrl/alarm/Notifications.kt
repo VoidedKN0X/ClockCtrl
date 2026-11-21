@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.os.Build
 import android.text.format.DateFormat
 import com.vknxworks.clockctrl.MainActivity
 import com.vknxworks.clockctrl.R
@@ -177,6 +178,11 @@ object Notifications {
                 .setOnlyAlertOnce(true)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
             if (t.running) {
+                // Android 16 Live Updates: ask for the running timer to be promoted, so its countdown shows as a
+                // chip in the status bar and at the top of the lock screen. The chip counts down by itself from
+                // the chronometer below. On phones without Live Updates, or with them turned off for ClockCtrl,
+                // this is the same notification as before.
+                if (canRequestPromotion()) b.setRequestPromotedOngoing(true)
                 b.setUsesChronometer(true).setChronometerCountDown(true).setWhen(t.endAt).setShowWhen(true)
                     .setContentText(context.getString(R.string.timer_ends, time(context, t.endAt)))
                     .addAction(act(context, R.string.pause, broadcast(context, ActionReceiver.TIMER_PAUSE, t.id, 1000 + t.id)))
@@ -191,6 +197,27 @@ object Notifications {
         // Timers that were deleted
         nm.activeNotifications.filter { it.id in ID_TIMER_BASE until ID_SNOOZE_BASE && data.timers.none { t -> ID_TIMER_BASE + t.id == it.id } }
             .forEach { nm.cancel(it.id) }
+    }
+
+    /**
+     * `Notification.Builder.setRequestPromotedOngoing` exists from Android 16 minor release 1 (API 36.1).
+     * `SDK_INT_FULL` itself is API 36, so the major version is checked first.
+     */
+    fun liveUpdatesSupported(): Boolean = canRequestPromotion()
+
+    private fun canRequestPromotion(): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA &&
+            Build.VERSION.SDK_INT_FULL >= Build.VERSION_CODES_FULL.BAKLAVA_1
+
+    /**
+     * Whether Android will show running timers as a Live Update in the status bar: false on Android 16 before
+     * its first minor release and older, and when Live Updates are turned off for ClockCtrl in the phone's
+     * settings.
+     */
+    fun liveUpdatesAllowed(context: Context): Boolean {
+        if (!canRequestPromotion()) return false
+        val nm = context.getSystemService(NotificationManager::class.java) ?: return false
+        return runCatching { nm.canPostPromotedNotifications() }.getOrDefault(false)
     }
 
     fun cancelTimer(context: Context, id: Int) {

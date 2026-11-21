@@ -1,6 +1,22 @@
 package com.vknxworks.clockctrl.ui.timer
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import com.vknxworks.clockctrl.data.Backups
+import com.vknxworks.clockctrl.ui.lock.AppLock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -62,6 +78,21 @@ fun StopwatchScreen() {
     val best = remember(lapTimes) { if (lapTimes.size > 1) lapTimes.indexOf(lapTimes.min()) else -1 }
     val worst = remember(lapTimes) { if (lapTimes.size > 1) lapTimes.indexOf(lapTimes.max()) else -1 }
     val ordered = remember(lapTimes) { lapTimes.withIndex().reversed() }
+    val scope = rememberCoroutineScope()
+    val header = listOf(stringResource(R.string.laps_col_lap), stringResource(R.string.laps_col_time), stringResource(R.string.laps_col_total))
+    // Lap export: the laps as a CSV file in a place you pick.
+    val saveLaps = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val text = Backups.lapsCsv(laps, header)
+        scope.launch {
+            val ok = runCatching {
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) } ?: error("no stream")
+                }
+            }.isSuccess
+            Toast.makeText(context, if (ok) R.string.laps_saved else R.string.laps_save_failed, Toast.LENGTH_LONG).show()
+        }
+    }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         TabTitle(stringResource(R.string.tab_stopwatch))
@@ -81,6 +112,27 @@ fun StopwatchScreen() {
                         Btn(stringResource(R.string.resume), Icons.Outlined.PlayArrow, accent = true, Modifier.weight(1f)) { Watch.start(context, fromApp = true) }
                     }
                     else -> Btn(stringResource(R.string.start), Icons.Outlined.PlayArrow, accent = true, Modifier.weight(1f)) { Watch.start(context, fromApp = true) }
+                }
+            }
+        }
+        if (laps.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = Gutter), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = {
+                    val text = Backups.lapsText(laps) { n -> context.getString(R.string.lap_n, n) }
+                    // Android shows its own "Copied" confirmation.
+                    context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.tab_stopwatch), text))
+                }) {
+                    Icon(Icons.Outlined.ContentCopy, null, Modifier.size(18.dp), tint = CtrlColors.AccentText)
+                    Spacer(Modifier.size(6.dp))
+                    Text(stringResource(R.string.laps_copy), color = CtrlColors.AccentText)
+                }
+                TextButton(onClick = {
+                    AppLock.expectReturn()
+                    saveLaps.launch("clockctrl-laps-${LocalDate.now()}.csv")
+                }) {
+                    Icon(Icons.Outlined.FileDownload, null, Modifier.size(18.dp), tint = CtrlColors.AccentText)
+                    Spacer(Modifier.size(6.dp))
+                    Text(stringResource(R.string.laps_save), color = CtrlColors.AccentText)
                 }
             }
         }

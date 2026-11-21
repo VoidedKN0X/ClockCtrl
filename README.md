@@ -19,8 +19,9 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Sunrise alarm** (per alarm): 5 to 30 minutes before the alarm, the screen slowly brightens from a deep warm colour to bright white over the lock screen, then the sound fades in. If you're using the phone then, a quiet notification shows instead
 - **Solve a sum to dismiss** (per alarm): an easy, medium or hard sum with a large keypad and TalkBack support; Snooze stays one tap, and after 3 wrong answers you get a new sum
 - **World clock:** your local time and date, the next alarm, and any cities you add with the difference to your time
-- **Timers:** type a time or tap a preset, run several at once, pause, add a minute, reset and name them. Running timers show a live countdown in the notification with Pause and +1 min
-- **Stopwatch** with laps (fastest and slowest marked), kept running in a notification while you use other apps
+- **Timers:** type a time or tap a preset, run several at once, pause, add a minute, reset and name them. Running timers show a live countdown in the notification with Pause and +1 min, and on Android 16 with Live Updates as a countdown chip in the status bar
+- **Stopwatch** with laps (fastest and slowest marked), kept running in a notification while you use other apps. Copy the laps or save them as a CSV file
+- **Export and import** your alarms (add them to yours or replace yours) and your settings and world clock cities, as files you keep
 - **Works with other apps:** "Set alarm" and "Set timer" from other apps and assistants, and the alarm icon in the status bar opens ClockCtrl
 - **App lock** with its own PIN and optional fingerprint unlock (ringing alarms and timers can always be stopped), and **Hide in screenshots** / **Hide in recent apps** (both off until you turn them on)
 - **Ctrl / Signal look**, shared by every Ctrl app: dark and light, following your phone's dark theme setting, high contrast, one violet accent, Space Grotesk and JetBrains Mono; landscape, tablet and foldable layouts
@@ -82,6 +83,7 @@ Settings and About are behind your profile picture at the top right of every tab
 | Vibration (`VIBRATE`) | Vibrating while an alarm rings, if the alarm has vibration on. |
 | Prevent phone from sleeping (`WAKE_LOCK`) | Keeping the phone awake while an alarm or timer rings. |
 | Use biometric hardware (`USE_BIOMETRIC`) | Optional fingerprint unlock for the app lock. |
+| Live Updates (`POST_PROMOTED_NOTIFICATIONS`) | On Android 16 with Live Updates: showing a running timer as a countdown chip in the status bar. Granted at install, no prompt; you can turn it off for ClockCtrl in Android's settings. |
 | Hide other apps' floating windows (`HIDE_OVERLAY_WINDOWS`) | Hide other apps' floating windows over the PIN screen (and the app lock's other screens and delete confirmations), so nothing can be drawn over them. Granted at install, no prompt. |
 
 Android also lists a "dynamic receiver" permission (`DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`) that AndroidX adds to every app so only ClockCtrl itself can send it internal broadcasts; it gives the app no access to anything. ClockCtrl has no internet, location, contacts, storage, microphone or phone permissions.
