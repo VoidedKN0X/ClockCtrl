@@ -24,6 +24,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Export and import** your alarms (add them to yours or replace yours) and your settings and world clock cities, as files you keep
 - **Works with other apps:** "Set alarm" and "Set timer" from other apps and assistants, and the alarm icon in the status bar opens ClockCtrl
 - **App lock** with its own PIN and optional fingerprint unlock (ringing alarms and timers can always be stopped), and **Hide in screenshots** / **Hide in recent apps** (both off until you turn them on)
+- **English and Dutch**, following your phone's language
 - **Ctrl / Signal look**, shared by every Ctrl app: dark and light, following your phone's dark theme setting, high contrast, one violet accent, Space Grotesk and JetBrains Mono; landscape, tablet and foldable layouts
 
 ## Requirements
