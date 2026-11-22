@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.FileNotFoundException
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -71,6 +72,9 @@ data class Timer(
     val running: Boolean get() = endAt > 0L && !ringing
     fun left(now: Long = System.currentTimeMillis()): Long = if (running) (endAt - now).coerceAtLeast(0) else remainingMs
     val reset: Boolean get() = !running && !ringing && remainingMs == lengthMs
+
+    /** After Stop on a finished timer: no longer ringing, back to its starting length. Unchanged when it isn't ringing. */
+    fun stoppedAfterRinging(): Timer = if (ringing) copy(ringing = false, remainingMs = lengthMs, endAt = 0L) else this
 }
 
 @Serializable
@@ -125,9 +129,7 @@ object ClockStore {
         if (loaded) return _data.value
         synchronized(lock) {
             if (!loaded) {
-                _data.value = runCatching {
-                    json.decodeFromString<ClockData>(String(file(context).readFully(), Charsets.UTF_8))
-                }.getOrDefault(ClockData())
+                _data.value = readOrSetAside(file(context).baseFile, System.currentTimeMillis())
                 loaded = true
             }
         }
@@ -184,6 +186,40 @@ object ClockStore {
                 f.failWrite(out)
             }
         }
+    }
+
+    /** Turns the file's bytes into data; throws when they aren't a valid ClockCtrl file. */
+    internal fun decode(bytes: ByteArray): ClockData = json.decodeFromString<ClockData>(String(bytes, Charsets.UTF_8))
+
+    /**
+     * Reads [base] (the clock.json behind the AtomicFile). A missing file is normal (first start) and gives empty
+     * data. A file that is there but can't be read or decoded is never written over: it is renamed to
+     * `clock.unreadable-<now>.json` next to it first, so the alarms in it can still be recovered by hand, and the
+     * app carries on with empty data. Call with [lock] held (or from a test).
+     */
+    internal fun readOrSetAside(base: File, now: Long): ClockData {
+        val f = AtomicFile(base)
+        val bytes = try {
+            f.readFully()
+        } catch (e: FileNotFoundException) {
+            return ClockData()
+        } catch (e: Exception) {
+            setAside(base, now)
+            return ClockData()
+        }
+        return try {
+            decode(bytes)
+        } catch (e: Exception) {
+            setAside(base, now)
+            ClockData()
+        }
+    }
+
+    /** Moves an unreadable clock.json out of the way. Returns the new file, or null when there was nothing to move or it failed. */
+    internal fun setAside(base: File, now: Long): File? {
+        if (!base.exists()) return null
+        val target = File(base.parentFile, "clock.unreadable-$now.json")
+        return if (runCatching { base.renameTo(target) }.getOrDefault(false)) target else null
     }
 
     fun newId(context: Context): Int {

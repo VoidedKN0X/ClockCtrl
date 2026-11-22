@@ -4,6 +4,19 @@ What changed in each ClockCtrl release. Every release on the [Releases page](htt
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Not yet tried on a phone: built and checked by CI only.
+
+### Fixed
+
+- **Stop works on a finished timer again.** When two timers ended close together, or an alarm went off while a timer was ringing, the first timer stayed on "Done" on the Timer tab and its Stop button did nothing (only Reset, +1 min or Delete cleared it). The same happened when Android closed ClockCtrl while a timer was ringing. Now a ringing timer that gets taken over by another timer or an alarm is put back to its starting length, just like pressing Stop, and Stop on a timer that shows "Done" always resets it, also when nothing is ringing any more.
+- **Alarms are never wiped by a damaged file.** If the file that holds your alarms, timers and cities could ever not be read (damaged, or written by a future version), ClockCtrl used to start with an empty list and then save that empty list over it. Now it first moves the unreadable file aside as `clock.unreadable-<time>.json` in the app's storage, so nothing is overwritten. You would still see an empty list in that case, but the old file is kept.
+
+### Changed
+
+- **The alarm editor reacts faster while you type a label.** The name of the alarm sound is looked up once when the sound changes, instead of again on every key press and every switch you flip.
+
 ## v0.5.1 (2026-11-21)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

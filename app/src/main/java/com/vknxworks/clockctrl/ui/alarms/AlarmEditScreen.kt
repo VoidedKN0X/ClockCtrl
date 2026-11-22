@@ -180,7 +180,9 @@ fun AlarmEditScreen(id: Int) {
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                GroupRow(stringResource(R.string.sound), ringtoneName(context, ringtone), icon = Icons.Outlined.MusicNote, showChevron = true, onClick = { pickSound(ringtone) })
+                // Looked up once per sound (a MediaStore query), not on every keystroke in the label field.
+                val soundName = remember(ringtone) { ringtoneName(context, ringtone) }
+                GroupRow(stringResource(R.string.sound), soundName, icon = Icons.Outlined.MusicNote, showChevron = true, onClick = { pickSound(ringtone) })
                 GroupSwitch(stringResource(R.string.vibrate), null, vibrate, Icons.Outlined.Vibration) { vibrate = it }
                 if (original != null && original.enabled && original.repeating) {
                     GroupRow(

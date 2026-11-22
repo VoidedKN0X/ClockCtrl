@@ -138,7 +138,7 @@ private fun TimerCard(t: Timer, now: Long, onRename: () -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             when {
                 ringing -> {
-                    Pill(stringResource(R.string.stop), Icons.Outlined.Close, accent = false, onAccent = true, Modifier.weight(1f)) { RingService.stopTimer(context, t.id) }
+                    Pill(stringResource(R.string.stop), Icons.Outlined.Close, accent = false, onAccent = true, Modifier.weight(1f)) { RingService.stopFinishedTimer(context, t.id) }
                     Pill(stringResource(R.string.plus_minute), Icons.Outlined.Add, accent = false, onAccent = true, Modifier.weight(1f)) { Timers.addMinute(context, t.id) }
                 }
                 t.running -> {

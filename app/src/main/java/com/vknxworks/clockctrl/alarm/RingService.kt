@@ -92,7 +92,13 @@ class RingService : Service() {
                 stopRinging()
             }
             ACTION_DISMISS -> stopRinging()
-            ACTION_STOP_TIMER -> if (_ringing.value?.let { it.isTimer && (id < 0 || it.id == id) } == true) stopRinging()
+            ACTION_STOP_TIMER -> if (_ringing.value?.let { it.isTimer && (id < 0 || it.id == id) } == true) {
+                stopRinging()
+            } else {
+                // Stop for a timer this service isn't ringing (any more): still finish it, then go if nothing rings.
+                if (id >= 0) Timers.clearRinging(this, id)
+                finishIfIdle()
+            }
             else -> finishIfIdle()
         }
         return START_NOT_STICKY
@@ -107,7 +113,11 @@ class RingService : Service() {
 
     private fun ring(r: Ringing, ringtone: String?, vibrate: Boolean, gradualSeconds: Int) {
         stopSound()
+        val replaced = _ringing.value
         _ringing.value = r
+        // A timer that was ringing and is now taken over (by another timer or an alarm) is finished like Stop does,
+        // so it doesn't stay on "Done" with a Stop button that no longer reaches anything.
+        if (replaced != null && replaced.isTimer && !(r.isTimer && r.id == replaced.id)) Timers.clearRinging(this, replaced.id)
         foreground(r)
         // The alarm screen: over the lock screen through the full-screen notification, or straight away when allowed.
         runCatching {
@@ -315,7 +325,7 @@ class RingService : Service() {
         _ringing.value = null
         if (r != null && r.isTimer) {
             // A finished timer that was stopped goes back to its starting length.
-            ClockStore.update(this) { d -> d.copy(timers = d.timers.map { if (it.id == r.id && it.ringing) it.copy(ringing = false, remainingMs = it.lengthMs, endAt = 0L) else it }) }
+            ClockStore.update(this) { d -> d.copy(timers = d.timers.map { if (it.id == r.id) it.stoppedAfterRinging() else it }) }
             Notifications.updateTimers(this, ClockStore.data.value)
         }
         releaseAwake()
@@ -378,5 +388,15 @@ class RingService : Service() {
         }
 
         fun stopTimer(context: Context, id: Int) = send(context, ACTION_STOP_TIMER, id)
+
+        /**
+         * The Stop button of a finished timer. When this service is ringing that timer, it stops the sound (which also
+         * resets the timer). When it isn't (another timer or an alarm took over, or the app was closed while it rang),
+         * the timer is reset straight away, so Stop always does something.
+         */
+        fun stopFinishedTimer(context: Context, id: Int) {
+            val r = _ringing.value
+            if (r != null && r.isTimer && r.id == id) stopTimer(context, id) else Timers.clearRinging(context, id)
+        }
     }
 }

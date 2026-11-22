@@ -149,6 +149,15 @@ object Timers {
     }
     fun rename(context: Context, id: Int, label: String) = change(context, id) { it.copy(label = label.take(60)) }
     fun ringing(context: Context, id: Int) = change(context, id) { it.copy(ringing = true, remainingMs = 0L, endAt = 0L) }
+
+    /**
+     * A finished timer that no longer rings goes back to its starting length (what Stop does). Only touches a timer
+     * that is still marked as ringing, so a timer that was given +1 minute in the meantime keeps running.
+     */
+    fun clearRinging(context: Context, id: Int) {
+        if (ClockStore.load(context).timers.none { it.id == id && it.ringing }) return
+        change(context, id) { it.stoppedAfterRinging() }
+    }
 }
 
 /**
