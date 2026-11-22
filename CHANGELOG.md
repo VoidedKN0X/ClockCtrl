@@ -8,8 +8,6 @@ To publish a new version: bump `versionCode` and `versionName` in `app/build.gra
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.
 
-Not yet tried on a phone: built and checked by CI only.
-
 ### Fixed
 
 - **Stop works on a finished timer again.** When two timers ended close together, or an alarm went off while a timer was ringing, the first timer stayed on "Done" on the Timer tab and its Stop button did nothing (only Reset, +1 min or Delete cleared it). The same happened when Android closed ClockCtrl while a timer was ringing. Now a ringing timer that gets taken over by another timer or an alarm is put back to its starting length, just like pressing Stop, and Stop on a timer that shows "Done" always resets it, also when nothing is ringing any more.
